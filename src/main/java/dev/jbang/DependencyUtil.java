@@ -1,8 +1,18 @@
 package dev.jbang;
 
-import static dev.jbang.Settings.CP_SEPARATOR;
-import static dev.jbang.Util.*;
+import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenFormatStage;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenResolvedArtifact;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenStrategyStage;
+import org.jboss.shrinkwrap.resolver.api.maven.PackagingType;
+import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinate;
+import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinates;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,10 +20,13 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.jboss.shrinkwrap.resolver.api.maven.*;
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinate;
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinates;
+import static dev.jbang.Settings.CP_SEPARATOR;
+import static dev.jbang.Util.errorMsg;
+import static dev.jbang.Util.infoHeader;
+import static dev.jbang.Util.infoMsg;
+import static dev.jbang.Util.infoMsgFmt;
 
 public class DependencyUtil {
 
@@ -69,6 +82,8 @@ public class DependencyUtil {
 			repos.add(toMavenRepo(ALIAS_JITPACK));
 		}
 
+		//pom.xml expansion
+
 		String depsHash = String.join(CP_SEPARATOR, depIds);
 
 		List<ArtifactInfo> cachedDeps = null;
@@ -110,18 +125,9 @@ public class DependencyUtil {
 		}
 	}
 
-	public List<ArtifactInfo> resolveDependenciesViaAether(List<String> depIds, List<MavenRepo> customRepos,
-			boolean offline, boolean loggingEnabled, boolean transitively) {
 
-		ConfigurableMavenResolverSystem resolver = Maven.configureResolver()
-														.withMavenCentralRepo(false)
-														.workOffline(offline);
 
-		customRepos.stream().forEach(mavenRepo -> {
-			mavenRepo.apply(resolver);
-		});
-
-		System.setProperty("maven.repo.local", Settings.getLocalMavenRepo().toPath().toAbsolutePath().toString());
+	public List<ArtifactInfo> resolveDependenciesViaAether(ConfigurableMavenResolverSystem resolver, List<String> depIds, boolean loggingEnabled, boolean transitively) {
 
 		return depIds.stream().flatMap(it -> {
 
@@ -134,6 +140,7 @@ public class DependencyUtil {
 			try {
 				MavenStrategyStage resolve = resolver.resolve(depIdToArtifact(it).toCanonicalForm());
 				MavenFormatStage stage = null;
+
 
 				if (transitively) {
 					stage = resolve.withTransitivity();
@@ -150,6 +157,42 @@ public class DependencyUtil {
 
 			return artifacts.stream().map(xx -> new ArtifactInfo(xx.getCoordinate(), xx.asFile()));
 		}).collect(Collectors.toList());
+	}
+
+	/**
+	 * If ref resolves to a file ending in pom.xml and is readable will get 0..N dependencies from the build file.
+	 *
+	 * @param ref
+	 * @return stream of strings
+	 */
+	Stream<String> expandReference(String originalRef, String ref, List<MavenRepo> customRepos, boolean offline) {
+		try {
+			// If the reference is a URL we'll try to convert it to a proper GAV
+			URI uri = new URI(ref);
+			URI resolved = uri.resolve(originalRef);
+
+			if("file".equals(resolved.getScheme())) {
+				Path path = Paths.get(resolved);
+				buildMavenResolver(customRepos, offline).loadPomFromFile(path.toFile()).importCompileAndRuntimeDependencies().resolve().withTransitivity().asResolvedArtifact();
+
+			}
+		} catch (IllegalArgumentException | URISyntaxException e) {
+			// ignore and pass back ref
+		}
+		return Stream.of(ref);
+	}
+
+	private ConfigurableMavenResolverSystem buildMavenResolver(List<MavenRepo> customRepos, boolean offline) {
+		ConfigurableMavenResolverSystem resolver = Maven.configureResolver()
+														.withMavenCentralRepo(false)
+														.workOffline(offline);
+
+		customRepos.stream().forEach(mavenRepo -> {
+			mavenRepo.apply(resolver);
+		});
+
+		System.setProperty("maven.repo.local", Settings.getLocalMavenRepo().toPath().toAbsolutePath().toString());
+		return resolver;
 	}
 
 	public String decodeEnv(String value) {
