@@ -19,12 +19,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinate;
-
 import dev.jbang.util.Util;
 import dev.jbang.util.VersionChecker;
 
+import org.apache.maven.Maven;
 import picocli.CommandLine;
 import picocli.CommandLine.Help.TextTable;
 import picocli.CommandLine.Model.CommandSpec;
@@ -162,16 +160,6 @@ public class Jbang extends BaseCommand {
 		sections.put("Other", asList("completion", "info", "version", "wrapper"));
 		CommandGroupRenderer renderer = new CommandGroupRenderer(sections);
 		return renderer;
-	}
-
-	static List<MavenCoordinate> findDeps(File pom) {
-		// todo use to dump out pom dependencies
-		return Maven.resolver()
-					.loadPomFromFile(pom)
-					.importCompileAndRuntimeDependencies()
-					.resolve()
-					.withoutTransitivity()
-					.asList(MavenCoordinate.class);
 	}
 
 	public static class CommandGroupRenderer implements CommandLine.IHelpSectionRenderer {

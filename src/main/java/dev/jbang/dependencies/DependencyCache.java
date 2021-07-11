@@ -1,5 +1,6 @@
 package dev.jbang.dependencies;
 
+import static dev.jbang.dependencies.ArtifactInfo.toCanonicalForm;
 import static dev.jbang.util.Util.warnMsg;
 
 import java.io.File;
@@ -14,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinate;
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinates;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -26,6 +25,8 @@ import com.google.gson.reflect.TypeToken;
 
 import dev.jbang.Settings;
 import dev.jbang.util.Util;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 public class DependencyCache {
 	private static Map<String, List<ArtifactInfo>> depCache = null;
@@ -37,7 +38,7 @@ public class DependencyCache {
 				try (Reader out = Files.newBufferedReader(Settings.getCacheDependencyFile())) {
 					JsonDeserializer<ArtifactInfo> serializer = (json, typeOfT, context) -> {
 						JsonObject jsonObject = json.getAsJsonObject();
-						MavenCoordinate gav = MavenCoordinates.createCoordinate(jsonObject.get("gav").getAsString());
+						Artifact gav = new DefaultArtifact(jsonObject.get("gav").getAsString());
 						File file = new File(jsonObject.get("file").getAsString());
 						long ts = jsonObject.has("ts") ? jsonObject.get("ts").getAsLong() : 0;
 						return new ArtifactInfo(gav, file, ts);
@@ -70,7 +71,7 @@ public class DependencyCache {
 		try (Writer out = Files.newBufferedWriter(Settings.getCacheDependencyFile())) {
 			JsonSerializer<ArtifactInfo> serializer = (src, typeOfSrc, context) -> {
 				JsonObject json = new JsonObject();
-				json.addProperty("gav", src.getCoordinate().toCanonicalForm());
+				json.addProperty("gav", toCanonicalForm(src.getCoordinate()));
 				json.addProperty("file", src.getFile().getPath());
 				json.addProperty("ts", src.getTimestamp());
 				return json;

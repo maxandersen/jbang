@@ -1,6 +1,7 @@
 package dev.jbang.spi;
 
 import static dev.jbang.cli.BaseCommand.EXIT_UNEXPECTED_STATE;
+import static dev.jbang.dependencies.ArtifactInfo.toCanonicalForm;
 
 import java.io.BufferedReader;
 import java.io.FileDescriptor;
@@ -75,7 +76,7 @@ public class IntegrationManager {
 															.map(s -> new MapRepoEntry(s.getId(), s.getUrl()))
 															.collect(Collectors.toList());
 		List<Map.Entry<String, Path>> deps = artifacts	.stream()
-														.map(s -> new MapEntry(s.getCoordinate().toCanonicalForm(),
+														.map(s -> new MapEntry(toCanonicalForm(s.getCoordinate()),
 																s.getFile().toPath()))
 														.collect(Collectors.toList());
 		Path nativeImage = null;

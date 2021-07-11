@@ -94,18 +94,5 @@ class TestAddDeps extends BaseTest {
 			"  </build>\n" +
 			"</project>\n";
 
-	@Test
-	void testAddDeps(@TempDir File dir) throws IOException {
-
-		File pom = new File(dir, "pom.xml");
-
-		Util.writeString(pom.toPath(), example);
-
-		List<MavenCoordinate> result = Jbang.findDeps(pom);
-
-		assertThat(result.stream().map(MavenCoordinate::toCanonicalForm).collect(Collectors.toList()),
-				containsInAnyOrder("org.projectlombok:lombok:jar:1.18.10", "info.picocli:picocli:jar:4.5.0"));
-
-	}
 
 }

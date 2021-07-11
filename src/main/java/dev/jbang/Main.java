@@ -5,15 +5,20 @@ import java.util.List;
 
 import dev.jbang.cli.Jbang;
 
+import io.quarkus.runtime.Quarkus;
+import io.quarkus.runtime.QuarkusApplication;
+import io.quarkus.runtime.annotations.QuarkusMain;
 import picocli.CommandLine;
 
-public class Main {
-	public static void main(String... args) {
-		CommandLine cli = Jbang.getCommandLine();
-		args = handleDefaultRun(cli.getCommandSpec(), args);
-		int exitcode = cli.execute(args);
-		System.exit(exitcode);
-	}
+public class Main implements QuarkusApplication {
+
+		@Override
+		public int run(String... args) throws Exception {
+			CommandLine cli = Jbang.getCommandLine();
+			args = handleDefaultRun(cli.getCommandSpec(), args);
+			int exitcode = cli.execute(args);
+			return exitcode;
+		}
 
 	private static String[] handleDefaultRun(CommandLine.Model.CommandSpec spec, String[] args) {
 		List<String> leadingOpts = new ArrayList<>();

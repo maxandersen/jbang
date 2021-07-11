@@ -1,6 +1,8 @@
 package dev.jbang.dependencies;
 
-import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
+import com.sun.tools.javac.util.List;
+import io.quarkus.bootstrap.resolver.maven.MavenArtifactResolver;
+import org.eclipse.aether.repository.RemoteRepository;
 
 public class MavenRepo {
 
@@ -28,7 +30,8 @@ public class MavenRepo {
 		this.url = url;
 	}
 
-	public void apply(ConfigurableMavenResolverSystem resolver) {
-		resolver.withRemoteRepo(getId() == null ? getUrl() : getId(), getUrl(), "default");
+	public void apply(MavenArtifactResolver resolver) {
+
+		resolver.addRemoteRepositories(List.of(new RemoteRepository.Builder(getId() == null ? getUrl() : getId(), "default", getUrl()).build()));
 	}
 }

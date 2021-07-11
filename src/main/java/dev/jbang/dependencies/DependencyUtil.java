@@ -17,18 +17,16 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.MavenFormatStage;
-import org.jboss.shrinkwrap.resolver.api.maven.MavenResolvedArtifact;
-import org.jboss.shrinkwrap.resolver.api.maven.MavenStrategyStage;
-import org.jboss.shrinkwrap.resolver.api.maven.PackagingType;
-import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinate;
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinates;
+import io.quarkus.bootstrap.resolver.maven.BootstrapMavenContext;
+import io.quarkus.bootstrap.resolver.maven.BootstrapMavenException;
+import io.quarkus.bootstrap.resolver.maven.MavenArtifactResolver;
+import org.apache.maven.Maven;
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 
 import dev.jbang.Settings;
 import dev.jbang.cli.ExitException;
+import org.eclipse.aether.resolution.ArtifactResult;
 
 public class DependencyUtil {
 
@@ -136,40 +134,23 @@ public class DependencyUtil {
 	public static List<ArtifactInfo> resolveDependenciesViaAether(List<String> depIds, List<MavenRepo> customRepos,
 			boolean offline, boolean loggingEnabled, boolean transitively) {
 
-		ConfigurableMavenResolverSystem resolver = Maven.configureResolver()
-														.withMavenCentralRepo(false)
-														.workOffline(offline);
-
+		MavenArtifactResolver resolver = null;
+		
+		BootstrapMavenContext ctx;
+		
 		customRepos.stream().forEach(mavenRepo -> {
 			mavenRepo.apply(resolver);
 		});
 
 		System.setProperty("maven.repo.local", Settings.getLocalMavenRepo().toPath().toAbsolutePath().toString());
 
-		PomEquippedResolveStage pomResolve = null;
-
-		if (!depIds.isEmpty()) {
-			MavenCoordinate mc = depIdToArtifact(depIds.get(0));
-			if (PackagingType.POM.equals(mc.getType())) {
-				if (loggingEnabled) {
-					infoMsg("Loading " + mc);
-				}
-				System.setProperty("jbang-allowpom", "true"); // big hack to trick shrinkwrap in actually get pom
-																// location
-				MavenStrategyStage resolve = resolver.resolve(mc.toCanonicalForm());
-				pomResolve = resolver.loadPomFromFile(resolve.withoutTransitivity().asSingleFile());
-				System.getProperties().remove("jbang-allowpom");
-				depIds.remove(0);
-			}
-		}
-
-		final PomEquippedResolveStage ps = pomResolve;
+		//TODO handle poms
 
 		return depIds.stream().flatMap(it -> {
 
-			MavenCoordinate artifact = depIdToArtifact(it);
+			Artifact artifact = depIdToArtifact(it);
 
-			if (PackagingType.POM.equals(artifact.getType())) {
+			if ("pom".equals(artifact.getExtension())) {
 				// proactively avoiding that we break users in future
 				// when we support more than one BOM POM
 				throw new ExitException(1, "POM imports as found in " + it + " is only supported as the first import.");
@@ -180,15 +161,10 @@ public class DependencyUtil {
 				infoMsgFmt("    Resolving %s...", it);
 			}
 
-			List<MavenResolvedArtifact> artifacts;
+			List<Artifact> artifacts;
 			try {
-				MavenStrategyStage resolve;
-				MavenFormatStage stage = null;
-				if (ps != null) {
-					resolve = ps.resolve(artifact.toCanonicalForm());
-				} else {
-					resolve = resolver.resolve(artifact.toCanonicalForm());
-				}
+
+				ArtifactResult resolve = resolver.resolve(artifact);
 
 				if (transitively) {
 					stage = resolve.withTransitivity();
@@ -197,7 +173,7 @@ public class DependencyUtil {
 				}
 				artifacts = stage.asList(MavenResolvedArtifact.class); // , RUNTIME);
 
-			} catch (RuntimeException e) {
+			} catch (RuntimeException | BootstrapMavenException e) {
 				throw new ExitException(1, "Could not resolve dependency " + it, e);
 			}
 
@@ -228,7 +204,7 @@ public class DependencyUtil {
 		return (gav.matches());
 	}
 
-	public static MavenCoordinate depIdToArtifact(String depId) {
+	public static Artifact depIdToArtifact(String depId) {
 
 		Matcher gav = gavPattern.matcher(depId);
 		gav.find();
@@ -252,7 +228,7 @@ public class DependencyUtil {
 
 		// shrinkwrap format: groupId:artifactId:[packagingType:[classifier]]:version
 
-		return MavenCoordinates.createCoordinate(groupId, artifactId, version, PackagingType.of(type), classifier);
+		return new DefaultArtifact(groupId, artifactId, classifier, type, version);
 	}
 
 	public static String formatVersion(String version) {

@@ -1,370 +1,367 @@
 import org.gradle.crypto.checksum.Checksum
 
 plugins {
-	id 'io.quarkus'
+    id 'io.quarkus'
 
-	id "distribution"
-	id "com.github.johnrengelman.shadow" version "6.1.0"
-	id "java"
-	id "com.github.breadmoirai.github-release" version "2.2.12"
-	id "io.toolebox.git-versioner" version "1.6.4"
-	id 'org.gradle.crypto.checksum' version '1.1.0'
-	id "com.diffplug.spotless" version "5.11.0"
-	id 'de.fuerstenau.buildconfig' version '1.1.8'
-	id "com.dorongold.task-tree" version "1.5"
-	id "com.geoffgranum.gradle-conventional-changelog" version "0.3.1"
-	id "org.asciidoctor.jvm.convert" version "3.3.2"
-	id "org.ajoberstar.grgit" version "4.1.0"
-	id "org.sonarqube" version "3.1.1"
+    id "distribution"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "java"
+    id "com.github.breadmoirai.github-release" version "2.2.12"
+    id "io.toolebox.git-versioner" version "1.6.4"
+    id 'org.gradle.crypto.checksum' version '1.1.0'
+    id "com.diffplug.spotless" version "5.11.0"
+    id 'de.fuerstenau.buildconfig' version '1.1.8'
+    id "com.dorongold.task-tree" version "1.5"
+    id "com.geoffgranum.gradle-conventional-changelog" version "0.3.1"
+    id "org.asciidoctor.jvm.convert" version "3.3.2"
+    id "org.ajoberstar.grgit" version "4.1.0"
+    id "org.sonarqube" version "3.1.1"
 
 
 }
 
 repositories {
-	mavenCentral()
-	maven { url 'https://jitpack.io' }
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
-		implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'io.quarkus:quarkus-arc'
+    implementation 'io.quarkus:quarkus-picocli'
+    implementation 'io.quarkiverse.mavenresolver:quarkus-maven-resolver:0.0.2'
 
-	implementation 'com.offbytwo:docopt:0.6.0.20150202'
+    implementation 'com.offbytwo:docopt:0.6.0.20150202'
 
-	implementation 'org.apache.commons:commons-text:1.9'
-	implementation 'org.apache.commons:commons-compress:1.20'
-	implementation 'info.picocli:picocli:4.6.1'
-	implementation 'io.quarkus.qute:qute-core:1.12.2.Final'
-	implementation 'kr.motd.maven:os-maven-plugin:1.7.0'
-	implementation 'org.codehaus.plexus:plexus-java:1.0.6'
-	implementation 'com.google.code.gson:gson:2.8.6'
-	implementation 'org.jsoup:jsoup:1.13.1'
+    implementation 'org.apache.commons:commons-text:1.9'
+    implementation 'org.apache.commons:commons-compress:1.20'
 
-	implementation 'com.github.jbangdev.jbang-resolver:shrinkwrap-resolver-api:3.1.5-allowpom'
-	implementation 'com.github.jbangdev.jbang-resolver:shrinkwrap-resolver-impl-maven:3.1.5-allowpom'
-
-	//implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-api:3.1.4'
-	//implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:3.1.4'
-	implementation "org.slf4j:slf4j-nop:1.7.30"
-	implementation "org.jboss:jandex:2.2.3.Final"
-	//implementation 'org.apache.maven:maven-aether-provider:3.0.5'
-	//implementation 'com.google.guava:guava:28.2-jre'
+    implementation 'io.quarkus.qute:qute-core'
+    implementation 'kr.motd.maven:os-maven-plugin:1.7.0'
+    implementation 'org.codehaus.plexus:plexus-java:1.0.6'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'org.jsoup:jsoup:1.13.1'
 
 
-	testCompile "com.github.tomakehurst:wiremock-jre8:2.27.2"
+    implementation "org.jboss:jandex:2.2.3.Final"
 
-	testImplementation "org.junit.jupiter:junit-jupiter:5.7.1"
-	testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.7.1')
-	testImplementation "com.github.stefanbirkner:system-rules:1.17.2"
-	testImplementation(
-			'org.hamcrest:hamcrest-library:2.2'
-	)
 
-	//testCompile 'com.github.maxandersen.karate:karate-junit:19e06766'
-	//testCompile 'com.github.maxandersen.karate:karate-apache:19e06766'
-	//testCompile 'com.github.maxandersen.karate:karate-netty:19e06766'
+    testCompile "com.github.tomakehurst:wiremock-jre8:2.27.2"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.7.1"
+    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.7.1')
+    testImplementation "com.github.stefanbirkner:system-rules:1.17.2"
+    testImplementation(
+            'org.hamcrest:hamcrest-library:2.2'
+    )
+
+    //testCompile 'com.github.maxandersen.karate:karate-junit:19e06766'
+    //testCompile 'com.github.maxandersen.karate:karate-apache:19e06766'
+    //testCompile 'com.github.maxandersen.karate:karate-netty:19e06766'
 }
 
 // to enable reproducible builds
 tasks.withType(AbstractArchiveTask) {
-	preserveFileTimestamps = false
-	reproducibleFileOrder = true
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
 }
 
 
 sonarqube {
-properties {
-	property "sonar.projectKey", "jbangdev_jbang"
-	property "sonar.organization", "jbangdev"
-	property "sonar.host.url", "https://sonarcloud.io"
-}
+    properties {
+        property "sonar.projectKey", "jbangdev_jbang"
+        property "sonar.organization", "jbangdev"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
 }
 
 spotless {
-	lineEndings 'UNIX'
-	format 'misc', {
-		target '**/*.gradle', '**/*.md', '**/.gitignore'
-		targetExclude 'CONTRIBUTORS.md', 'src/main/scripts/container/README.md', 'build/container/README.md', ' build/reports/**', ' build/test-results/**' // all-contributor bot adds non-indented code
-		trimTrailingWhitespace()
-		indentWithTabs(4) // or spaces. Takes an integer argument if you don't like 4
-		endWithNewline()
-	}
-	java {
-		importOrder 'java', 'javax', 'org', 'com', 'dev.jbang', ''
-		removeUnusedImports()
-		eclipse().configFile "misc/eclipse_formatting_nowrap.xml"
-	}
-	format 'xml', {
-		targetExclude 'build/test-results', fileTree('.idea')
-		target '**/*.xml', '**/*.nuspec'
-	}
+    lineEndings 'UNIX'
+    format 'misc', {
+        target '**/*.gradle', '**/*.md', '**/.gitignore'
+        targetExclude 'CONTRIBUTORS.md', 'src/main/scripts/container/README.md', 'build/container/README.md', ' build/reports/**', ' build/test-results/**'
+        // all-contributor bot adds non-indented code
+        trimTrailingWhitespace()
+        indentWithTabs(4) // or spaces. Takes an integer argument if you don't like 4
+        endWithNewline()
+    }
+    java {
+        importOrder 'java', 'javax', 'org', 'com', 'dev.jbang', ''
+        removeUnusedImports()
+        eclipse().configFile "misc/eclipse_formatting_nowrap.xml"
+    }
+    format 'xml', {
+        targetExclude 'build/test-results', fileTree('.idea')
+        target '**/*.xml', '**/*.nuspec'
+    }
 }
 
 task versionTxt() {
-	doLast {
-		new File(project.buildDir, "tmp/version.txt").text = project.version
-	}
+    doLast {
+        new File(project.buildDir, "tmp/version.txt").text = project.version
+    }
 }
 
 def commonSpec = project.copySpec {
-	from('examples') {
-		include '**/*.java'
-		into 'examples'
-	}
-	from(shadowJar) {
-		into 'bin'
-	}
-	from(project.buildDir) {
-		include 'tmp/version.txt'
-	}
-	from('src/main/scripts') {
-		include 'jbang'
-		include 'jbang.cmd'
-		include 'jbang.ps1'
-		into 'bin'
-	}
+    from('examples') {
+        include '**/*.java'
+        into 'examples'
+    }
+    from(shadowJar) {
+        into 'bin'
+    }
+    from(project.buildDir) {
+        include 'tmp/version.txt'
+    }
+    from('src/main/scripts') {
+        include 'jbang'
+        include 'jbang.cmd'
+        include 'jbang.ps1'
+        into 'bin'
+    }
 }
 distributions {
-	main {
-		contents {
-			with commonSpec
-		}
-	}
-	latest {
-		contents {
-			with commonSpec
-		}
-	}
+    main {
+        contents {
+            with commonSpec
+        }
+    }
+    latest {
+        contents {
+            with commonSpec
+        }
+    }
 }
 
 latestDistZip {
-	archiveName = "${project.name}.zip"
+    archiveName = "${project.name}.zip"
 }
 
 
 latestDistTar {
-	archiveName = "${project.name}.tar"
+    archiveName = "${project.name}.tar"
 }
 
 jar {
-	manifest {
-		attributes (
-				'Main-Class': 'dev.jbang.Main',
-		)
-	}
-	}
+    manifest {
+        attributes(
+                'Main-Class': 'dev.jbang.Main',
+        )
+    }
+}
 
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_11
-	targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 compileJava {
-	options.encoding = 'UTF-8'
-	options.compilerArgs << "-Xlint:unchecked"
+    options.encoding = 'UTF-8'
+    options.compilerArgs << "-Xlint:unchecked"
 }
 
 compileTestJava {
-	options.encoding = 'UTF-8'
-	options.compilerArgs << "-Xlint:unchecked"
+    options.encoding = 'UTF-8'
+    options.compilerArgs << "-Xlint:unchecked"
 }
 
 shadowJar {
-	minimize()  {
-		//exclude(dependency('org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi:.*'))
-		//exclude(dependency('org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:.*'))
-		exclude(dependency('com.github.jbangdev.jbang-resolver:shrinkwrap-resolver-spi:.*'))
-		exclude(dependency('com.github.jbangdev.jbang-resolver:shrinkwrap-resolver-impl-maven:.*'))
+    minimize() {
+        //exclude(dependency('org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-spi:.*'))
+        //exclude(dependency('org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven:.*'))
+        exclude(dependency('com.github.jbangdev.jbang-resolver:shrinkwrap-resolver-spi:.*'))
+        exclude(dependency('com.github.jbangdev.jbang-resolver:shrinkwrap-resolver-impl-maven:.*'))
 
-		//exclude(dependency('org.slf4j:slf4j-api:.*'))
-		exclude(dependency('org.slf4j:slf4j-nop:.*'))
-		exclude(dependency('org.jboss.logging:jboss-logging:.*'))
+        //exclude(dependency('org.slf4j:slf4j-api:.*'))
+        exclude(dependency('org.slf4j:slf4j-nop:.*'))
+        exclude(dependency('org.jboss.logging:jboss-logging:.*'))
 
 
-	}
-	mergeServiceFiles()
-	manifest {
-		attributes 'Main-Class': 'dev.jbang.Main'
-	}
-	// warning is printed about deprecation in 7.0 but if I fix this shadowjar turns into a bogus file
-	archiveName = "${baseName}.${extension}"
+    }
+    mergeServiceFiles()
+    manifest {
+        attributes 'Main-Class': 'dev.jbang.Main'
+    }
+    // warning is printed about deprecation in 7.0 but if I fix this shadowjar turns into a bogus file
+    archiveName = "${baseName}.${extension}"
 }
 
 test {
-	useJUnitPlatform()
-	//testLogging.showStandardStreams = true
+    useJUnitPlatform()
+    //testLogging.showStandardStreams = true
 
 }
 
 task karateExecute(type: JavaExec) {
-	classpath = sourceSets.test.runtimeClasspath
-	main = System.properties.getProperty('mainClass')
+    classpath = sourceSets.test.runtimeClasspath
+    main = System.properties.getProperty('mainClass')
 }
 
 task copyResources(type: Copy) {
-	from "${projectDir}/src/main/resources"
-	into "${buildDir}/classes/java/main"
+    from "${projectDir}/src/main/resources"
+    into "${buildDir}/classes/java/main"
 }
 processResources.dependsOn copyResources
 
 
 task copyTestResources(type: Copy) {
-	from "${projectDir}/itests"
-	into "${buildDir}/classes/java/test/itests"
+    from "${projectDir}/itests"
+    into "${buildDir}/classes/java/test/itests"
 }
 processTestResources.dependsOn copyTestResources
 
 task createChecksum(type: Checksum) {
-	dependsOn(assembleDist)
-	files = files([distZip, latestDistZip, distTar, latestDistTar].outputs.files.flatten())
-	outputDir = distZip.destinationDir
-	algorithm = Checksum.Algorithm.SHA256
+    dependsOn(assembleDist)
+    files = files([distZip, latestDistZip, distTar, latestDistTar].outputs.files.flatten())
+    outputDir = distZip.destinationDir
+    algorithm = Checksum.Algorithm.SHA256
 }
 
 task homebrew(type: Copy) {
-	dependsOn(createChecksum)
-	inputs.property('version', project.version)
-	from('src/main/scripts/brew/jbang.rb')
-	into(buildDir.toString() + '/brew/formula')
-	doFirst { t ->
-		t.filter(org.apache.tools.ant.filters.ReplaceTokens,
-			tokens: [
-				projectVersion: project.version,
-				sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
-			]
-		)
-	}
+    dependsOn(createChecksum)
+    inputs.property('version', project.version)
+    from('src/main/scripts/brew/jbang.rb')
+    into(buildDir.toString() + '/brew/formula')
+    doFirst { t ->
+        t.filter(org.apache.tools.ant.filters.ReplaceTokens,
+                tokens: [
+                        projectVersion: project.version,
+                        sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
+                ]
+        )
+    }
 }
 
 task container(type: Copy) {
-	dependsOn(createChecksum)
-	inputs.property('version', project.version)
-	from('src/main/scripts/container/')
-	include('*')
-	into(buildDir.toString() + '/container')
-	doFirst { t ->
-		t.filter(org.apache.tools.ant.filters.ReplaceTokens,
-				tokens: [
-						projectVersion: project.version,
-						sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
-				]
-		)
-	}
+    dependsOn(createChecksum)
+    inputs.property('version', project.version)
+    from('src/main/scripts/container/')
+    include('*')
+    into(buildDir.toString() + '/container')
+    doFirst { t ->
+        t.filter(org.apache.tools.ant.filters.ReplaceTokens,
+                tokens: [
+                        projectVersion: project.version,
+                        sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
+                ]
+        )
+    }
 }
 
 task spec(type: Copy) {
-	dependsOn(createChecksum)
-	inputs.property('version', project.version)
-	from('src/main/scripts/spec/jbang.spec')
-	into(buildDir.toString() + '/spec')
-	doFirst { t ->
-		t.filter(org.apache.tools.ant.filters.ReplaceTokens,
-				tokens: [
-						projectVersion: project.version,
-						sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
-				]
-		)
-	}
+    dependsOn(createChecksum)
+    inputs.property('version', project.version)
+    from('src/main/scripts/spec/jbang.spec')
+    into(buildDir.toString() + '/spec')
+    doFirst { t ->
+        t.filter(org.apache.tools.ant.filters.ReplaceTokens,
+                tokens: [
+                        projectVersion: project.version,
+                        sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
+                ]
+        )
+    }
 }
 
 task scoop(type: Copy) {
-	dependsOn(createChecksum)
-	inputs.property('version', project.version)
-	from('src/main/scripts/scoop/jbang.json')
-	into(buildDir.toString() + '/scoop')
-	doFirst { t ->
-		t.filter(org.apache.tools.ant.filters.ReplaceTokens,
-				tokens: [
-						projectVersion: project.version,
-						sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
-				]
-		)
-	}
+    dependsOn(createChecksum)
+    inputs.property('version', project.version)
+    from('src/main/scripts/scoop/jbang.json')
+    into(buildDir.toString() + '/scoop')
+    doFirst { t ->
+        t.filter(org.apache.tools.ant.filters.ReplaceTokens,
+                tokens: [
+                        projectVersion: project.version,
+                        sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
+                ]
+        )
+    }
 }
 
 task snap(type: Copy) {
-	dependsOn(createChecksum)
-	inputs.property('version', project.version)
-	from('src/main/scripts/snap/snapcraft.yaml')
-	into(buildDir.toString() + '/snap')
-	doFirst { t ->
-		t.filter(org.apache.tools.ant.filters.ReplaceTokens,
-				tokens: [
-						projectVersion: project.version,
-						sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
-				]
-		)
-	}
+    dependsOn(createChecksum)
+    inputs.property('version', project.version)
+    from('src/main/scripts/snap/snapcraft.yaml')
+    into(buildDir.toString() + '/snap')
+    doFirst { t ->
+        t.filter(org.apache.tools.ant.filters.ReplaceTokens,
+                tokens: [
+                        projectVersion: project.version,
+                        sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
+                ]
+        )
+    }
 }
 
 task chocolatey(type: Copy) {
-	dependsOn(createChecksum)
-	inputs.property('version', project.version)
-	from('src/main/scripts/choco')
-	into(buildDir.toString() + '/choco')
-	doFirst { t ->
-		t.filter(org.apache.tools.ant.filters.ReplaceTokens,
-				tokens: [
-						projectVersion: project.version,
-						sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
-				]
-		)
-	}
+    dependsOn(createChecksum)
+    inputs.property('version', project.version)
+    from('src/main/scripts/choco')
+    into(buildDir.toString() + '/choco')
+    doFirst { t ->
+        t.filter(org.apache.tools.ant.filters.ReplaceTokens,
+                tokens: [
+                        projectVersion: project.version,
+                        sha256        : new File(distZip.archiveFile.asFile.get().absolutePath + '.sha256').text
+                ]
+        )
+    }
 }
 
 task copyITests(type: Copy) {
-	from "${projectDir}/itests"
-	into "${buildDir}/itests"
+    from "${projectDir}/itests"
+    into "${buildDir}/itests"
 }
 
 task tag(type: Exec) {
-	doFirst {
-		println 'Tagging with v' + project.version
-		commandLine 'git', 'tag', '-a', 'v' + project.version, '-F', 'CHANGELOG.md'
-	}
+    doFirst {
+        println 'Tagging with v' + project.version
+        commandLine 'git', 'tag', '-a', 'v' + project.version, '-F', 'CHANGELOG.md'
+    }
 }
 
 githubRelease {
-	// currently does not work as project.version not set.
-	// FilenameFilter filter = { dir, filename -> filename.contains(project.version) } // ensure nothing extra gets included.
-	//releaseAssets = distZip.destinationDir.listFiles filter
-	releaseAssets = files(distZip.destinationDir.listFiles(), new File(project.getBuildDir(), "tmp/version.txt"))
-	//println(getReleaseAssets().getFiles())
-	// set ORG_GRADLE_PROJECT_github_token
-	token = project.hasProperty('github_token') ? getProperty('github_token') : "unknown_github_token"
-	owner = "jbangdev"
-	targetCommitish = "main"
-	draft = true
-	try {
-		body = grgit.resolve.toTag(project.version).fullMessage
-	} catch (Exception e) {
-		body = "No tag description found for " + project.version
-	}
+    // currently does not work as project.version not set.
+    // FilenameFilter filter = { dir, filename -> filename.contains(project.version) } // ensure nothing extra gets included.
+    //releaseAssets = distZip.destinationDir.listFiles filter
+    releaseAssets = files(distZip.destinationDir.listFiles(), new File(project.getBuildDir(), "tmp/version.txt"))
+    //println(getReleaseAssets().getFiles())
+    // set ORG_GRADLE_PROJECT_github_token
+    token = project.hasProperty('github_token') ? getProperty('github_token') : "unknown_github_token"
+    owner = "jbangdev"
+    targetCommitish = "main"
+    draft = true
+    try {
+        body = grgit.resolve.toTag(project.version).fullMessage
+    } catch (Exception e) {
+        body = "No tag description found for " + project.version
+    }
 }
 
 versioner {
-	startFrom {
-		major = 0
-		minor = 0
-		patch = 1
-	}
-	git {
-		authentication {
-			https {
-				token = project.hasProperty('github_token') ? getProperty('github_token') : "unknown_github_token"
-			}
-		}
-	}
+    startFrom {
+        major = 0
+        minor = 0
+        patch = 1
+    }
+    git {
+        authentication {
+            https {
+                token = project.hasProperty('github_token') ? getProperty('github_token') : "unknown_github_token"
+            }
+        }
+    }
 }
 
 asciidoctor {
-	sourceDir = file('.')
-	sources {
-		include 'readme.adoc'
-	}
-	outputDir = file('build/docs')
-	logDocuments = true
-	baseDirFollowsSourceDir()
+    sourceDir = file('.')
+    sources {
+        include 'readme.adoc'
+    }
+    outputDir = file('build/docs')
+    logDocuments = true
+    baseDirFollowsSourceDir()
 }
 
 build.dependsOn(versionTxt)

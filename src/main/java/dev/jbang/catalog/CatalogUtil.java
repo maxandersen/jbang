@@ -17,11 +17,13 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.jboss.shrinkwrap.resolver.api.maven.coordinate.MavenCoordinate;
-
 import dev.jbang.Settings;
 import dev.jbang.dependencies.DependencyUtil;
 import dev.jbang.util.Util;
+import io.quarkus.bootstrap.resolver.maven.MavenArtifactResolver;
+import org.eclipse.aether.artifact.Artifact;
+
+import javax.inject.Inject;
 
 public class CatalogUtil {
 	public static final String JBANG_DOT_DIR = ".jbang";
@@ -39,6 +41,7 @@ public class CatalogUtil {
 			Map<String, String> properties) {
 		Path catalogFile = Catalog.getCatalogFile(null);
 		addAlias(catalogFile, name, scriptRef, description, arguments, properties);
+
 		return catalogFile;
 	}
 
@@ -287,7 +290,7 @@ public class CatalogUtil {
 				name = name.substring(0, p);
 			}
 		} else if (DependencyUtil.looksLikeAGav(ref)) {
-			MavenCoordinate coord = DependencyUtil.depIdToArtifact(ref);
+			Artifact coord = DependencyUtil.depIdToArtifact(ref);
 			name = coord.getArtifactId();
 		} else {
 			// If the script is a file or a URL we take the last part of
