@@ -20,3 +20,5 @@ gradleEnterprise {
 		//publishAlways()
 	}
 }
+include 'poor'
+

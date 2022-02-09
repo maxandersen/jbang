@@ -339,5 +339,5 @@ build.dependsOn(spec)
 //build.dependsOn(clidoc)
 
 group = "dev.jbang"
-sourceCompatibility = '8'
-targetCompatibility = '8'
+sourceCompatibility = "10"
+targetCompatibility = "10"

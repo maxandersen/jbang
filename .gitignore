@@ -20,3 +20,4 @@ package-lock.json
 itests/hello.java
 *.class
 CHANGELOG.md
+poor/build
