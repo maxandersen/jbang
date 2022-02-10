@@ -1,2 +1,0 @@
-dev/jbang/poor/MarkupTest.java
- dev.jbang.poor.MarkupTest

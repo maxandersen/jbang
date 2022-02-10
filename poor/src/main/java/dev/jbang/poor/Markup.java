@@ -1,10 +1,8 @@
 package dev.jbang.poor;
 
-import org.w3c.dom.Text;
-
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -80,6 +78,16 @@ public class Markup {
         return result.stream();
     }
 
+
+    static private PoorStyle popStyle(List<PoorStyle> stack, String styleName) {
+
+        for(int i=stack.size(); i>=0;i--) {
+            if(stack.get(i).styleName.equals(styleName)) {
+                return stack.remove(i);
+            }
+        }
+        return null;
+    }
     /**
      * Render console markup in to a Text instance.
      *
@@ -104,7 +112,7 @@ public class Markup {
         }
         var text = new PoorText();
 
-        var styleStack = new ArrayList();
+        var styleStack = new ArrayList<PoorStyle>();
 
         var spans = new ArrayList<Span>();
 
@@ -112,13 +120,27 @@ public class Markup {
             if(s.text!=null) {
                 text.append(s.text);
             } else if (s.tag!=null) {
+                PoorStyle openStyle;
                 if(s.tag.name().startsWith("/")) { // Closing tag
                     String styleName = s.tag.name().substring(1).strip();
 
                     if(!styleName.isEmpty()) { // explicit close
                         styleName = PoorStyle.normalize(styleName);
-                        
+                        openStyle = popStyle(styleStack, styleName);
+                        if(openStyle==null) {
+                            throw new PoorException(
+                                    String.format("closing tag '%s' at position %s doesn't match any open tag", s.tag.name(),s.position()));
+                        }
+                    } else {
+                        try {
+                            openStyle = styleStack.remove(styleStack.size() - 1);
+                        } catch(IndexOutOfBoundsException iob) {
+                            throw new PoorException(String.format("closing tag '[/]' at position %s has nothing to close",s.position()));
+                        }
+                    }
 
+                    if(openStyle.styleName.startsWith("@")) {
+                        //todo handle parameters
                     }
                 }
             }
