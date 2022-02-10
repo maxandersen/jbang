@@ -21,3 +21,4 @@ itests/hello.java
 *.class
 CHANGELOG.md
 poor/build
+build
