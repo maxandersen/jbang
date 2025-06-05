@@ -937,7 +937,7 @@ public class TestRun extends BaseTest {
 			String xml = s.toString("UTF-8");
 
 			assertThat(xml, not(containsString("NOT")));
-
+			
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc = dBuilder.parse(new InputSource(new StringReader(xml)));
@@ -1562,6 +1562,8 @@ public class TestRun extends BaseTest {
 		File f = examplesTestFolder.resolve("brokenresource.java").toFile();
 
 		ProjectBuilder pb = Project.builder();
+		//pb.build(f.getAbsolutePath());
+		
 		ExitException root = assertThrows(ExitException.class, () -> pb.build(f.getAbsolutePath()));
 		assertThat(root.getCause(), instanceOf(ResourceNotFoundException.class));
 		ResourceNotFoundException rnfe = (ResourceNotFoundException) root.getCause();

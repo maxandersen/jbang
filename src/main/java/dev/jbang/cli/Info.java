@@ -21,6 +21,7 @@ import dev.jbang.devkitman.JdkManager;
 import dev.jbang.source.*;
 import dev.jbang.util.JavaUtil;
 import dev.jbang.util.ModuleUtil;
+import dev.jbang.util.Util;
 
 import picocli.CommandLine;
 
@@ -329,12 +330,20 @@ class Docs extends BaseInfoCommand {
 		if (info.docs == null || info.docs.isEmpty()) {
 			return Optional.empty();
 		} else {
-			DocRef firstdoc = info.docs.get(0);
-			if (firstdoc.getRef().isURL()) {
-				return Optional.of(URI.create(firstdoc.getRef().getOriginalResource()));
+			// todo: do named lookup
+			int count = 0;
+			for (DocRef doc : info.docs) {
+				count++;
+				Util.verboseMsg("%d of %d: %s=%s".formatted(count, info.docs.size(), doc.getId(),
+						doc.getRef().getOriginalResource()));
+				if (doc.getRef().isURL()) {
+					return Optional.of(URI.create(doc.getRef().getOriginalResource()));
+				} else if (doc.getRef().exists()) {
+					return Optional.of(doc.getRef().getFile().toUri());
+				}
 			}
-			return Optional.of(firstdoc.getRef().getFile().toUri());
 		}
+		return Optional.empty();
 	}
 
 }

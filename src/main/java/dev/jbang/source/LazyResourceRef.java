@@ -34,7 +34,7 @@ public class LazyResourceRef implements ResourceRef {
 		if (resolvedRef == null) {
 			resolvedRef = resolver.resolve(getOriginalResource());
 			if (resolvedRef == null) {
-				throw new LazyResolveException();
+				return null;
 			}
 		}
 		return resolvedRef.getFile();
