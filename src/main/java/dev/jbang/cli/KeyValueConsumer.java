@@ -15,6 +15,7 @@ public class KeyValueConsumer implements CommandLine.IParameterConsumer {
 	@Override
 	public void consumeParameters(Stack<String> args, CommandLine.Model.ArgSpec argSpec,
 			CommandLine.Model.CommandSpec commandSpec) {
+
 		String arg = args.pop();
 		Matcher m = p.matcher(arg);
 		if (m.matches()) {

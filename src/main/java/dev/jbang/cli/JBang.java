@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import dev.jbang.Configuration;
+import dev.jbang.source.parser.KeyValue;
 import dev.jbang.util.Util;
 import dev.jbang.util.VersionChecker;
 
@@ -77,9 +78,12 @@ public class JBang extends BaseCommand {
 
 	static class VerboseQuietExclusive {
 		@Option(names = {
-				"--verbose" }, description = "jbang will be verbose on what it does.", scope = ScopeType.INHERIT)
-		void setVerbose(boolean verbose) {
-			Util.setVerbose(verbose);
+				"--verbose" }, description = "jbang will be verbose on what it does.", scope = ScopeType.INHERIT, preprocessor = StrictParameterPreprocessor.class, converter = CommaSeparatedConverter.class)
+		void setVerbose(List<String> levels) {
+			System.err.println("setVerbose: " + levels);
+			List<KeyValue> kvs = levels.stream().map(KeyValue::of).collect(Collectors.toList());
+
+			Util.setVerbose(true, kvs);
 		}
 
 		@Option(names = {

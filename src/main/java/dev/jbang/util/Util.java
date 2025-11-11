@@ -29,6 +29,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.regex.MatchResult;
@@ -54,6 +55,7 @@ import dev.jbang.dependencies.DependencyResolver;
 import dev.jbang.dependencies.DependencyUtil;
 import dev.jbang.dependencies.ModularClassPath;
 import dev.jbang.source.Source;
+import dev.jbang.source.parser.KeyValue;
 
 public class Util {
 
@@ -93,12 +95,34 @@ public class Util {
 	private static Instant startTime = Instant.now();
 
 	public static void setVerbose(boolean verbose) {
+		List<KeyValue> logLevels = new ArrayList<>();
+		logLevels.add(new KeyValue("dev.jbang", null));
+		setVerbose(verbose, logLevels);
+	}
+
+	public static void setVerbose(boolean verbose, List<KeyValue> logLevels) {
 		Util.verbose = verbose;
 		if (verbose) {
 			setQuiet(false);
 		}
-		Logger parent = Logger.getLogger("dev.jbang");
-		parent.setLevel(verbose ? java.util.logging.Level.FINE : java.util.logging.Level.INFO);
+		setupLogging(logLevels);
+	}
+
+	protected static void setupLogging(List<KeyValue> logLevels) {
+		// Print the current call stack to stderr
+		new Exception("Call stack").printStackTrace(System.err);
+		System.err.println("setupLogging: " + logLevels);
+		for (KeyValue entry : logLevels) {
+			Logger logger = Logger.getLogger(entry.getKey());
+			if (entry.getValue() == null || entry.getValue().isEmpty()) {
+				System.err.println("setting level to " + (verbose ? Level.FINE : Level.INFO));
+				logger.setLevel(verbose ? Level.FINE : Level.INFO);
+			} else {
+				System.err.println("setting level to " + entry.getValue());
+				Level level = Level.parse(entry.getValue());
+				logger.setLevel(level);
+			}
+		}
 	}
 
 	public static boolean isVerbose() {
