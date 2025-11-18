@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import dev.jbang.Configuration;
+import dev.jbang.Settings;
 import dev.jbang.util.Util;
 import dev.jbang.util.VersionChecker;
 
@@ -439,7 +440,7 @@ public class JBang extends BaseCommand {
 		}
 
 		private static List<Path> getPluginPaths() {
-			return Arrays.stream(System.getenv().getOrDefault("PATH", "").split(File.pathSeparator))
+			return Arrays.stream(Settings.getenv().getOrDefault("PATH", "").split(File.pathSeparator))
 				.filter(Util::isValidPath)
 				.map(Paths::get)
 				.filter(Files::isDirectory)

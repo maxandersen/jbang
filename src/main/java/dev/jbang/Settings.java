@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 import dev.jbang.catalog.Catalog;
 import dev.jbang.util.Util;
@@ -36,8 +38,36 @@ public class Settings {
 	final public static String CONFIG_CACHE_EVICT = "cache-evict";
 	final public static String DEFAULT_CACHE_EVICT = "PT12H";
 
+	/**
+	 * A map of environment variables that are shadowed by JBang to enable
+	 * testing/isolating jbang from the system environment.
+	 */
+	static Map<String, String> shadowedEnv;
+
+	public static Map<String, String> getenv() {
+		if (shadowedEnv == null) {
+			shadowedEnv = new HashMap<String, String>();
+			shadowedEnv.putAll(System.getenv());
+		}
+		return shadowedEnv;
+	}
+
+	static void setenv(String env, String value) {
+		if (shadowedEnv == null) {
+			shadowedEnv = new HashMap<String, String>();
+		}
+		shadowedEnv.put(env, value);
+	}
+
+	public static String getenv(String env) {
+		if (shadowedEnv.containsKey(env)) {
+			return shadowedEnv.get(env);
+		}
+		return System.getenv(env);
+	}
+
 	public static Path getJBangLocalMavenRepoOverride() {
-		String jbangRepo = System.getenv().get(JBANG_REPO);
+		String jbangRepo = Settings.getenv().get(JBANG_REPO);
 		if (jbangRepo != null) {
 			return Paths.get(jbangRepo);
 		} else {
@@ -51,7 +81,7 @@ public class Settings {
 
 	public static Path getConfigDir(boolean init) {
 		Path dir;
-		String jd = System.getenv(JBANG_DIR);
+		String jd = Settings.getenv(JBANG_DIR);
 		if (jd != null) {
 			dir = Paths.get(jd);
 		} else {
@@ -91,7 +121,7 @@ public class Settings {
 	 */
 	public static Path getLocalRootDir() {
 		Path dir;
-		String jlr = System.getenv(JBANG_LOCAL_ROOT);
+		String jlr = Settings.getenv(JBANG_LOCAL_ROOT);
 		if (jlr != null) {
 			dir = Paths.get(jlr);
 		} else {
@@ -107,7 +137,7 @@ public class Settings {
 
 	public static Path getCacheDir(boolean init) {
 		Path dir;
-		String v = System.getenv(JBANG_CACHE_DIR);
+		String v = Settings.getenv(JBANG_CACHE_DIR);
 		if (v != null) {
 			dir = Paths.get(v);
 		} else {
@@ -126,7 +156,7 @@ public class Settings {
 
 	public static Path getCacheDir(Cache.CacheClass cclass) {
 		Path dir;
-		String v = System.getenv(JBANG_CACHE_DIR + "_" + cclass.name().toUpperCase());
+		String v = Settings.getenv(JBANG_CACHE_DIR + "_" + cclass.name().toUpperCase());
 		if (v != null) {
 			dir = Paths.get(v);
 			Cache.setupCache(dir);
@@ -137,7 +167,7 @@ public class Settings {
 	}
 
 	public static int getDefaultJavaVersion() {
-		String v = System.getenv(ENV_DEFAULT_JAVA_VERSION);
+		String v = Settings.getenv(ENV_DEFAULT_JAVA_VERSION);
 		if (v != null) {
 			return Integer.parseInt(v);
 		}

@@ -376,7 +376,7 @@ class AppSetup extends BaseCommand {
 	}
 
 	public static boolean needsSetup() {
-		String envPath = System.getenv("PATH");
+		String envPath = Settings.getenv("PATH");
 		Path binDir = Settings.getConfigBinDir();
 		return !envPath.toLowerCase().contains(binDir.toString().toLowerCase());
 	}
@@ -389,7 +389,7 @@ class AppSetup extends BaseCommand {
 	public static boolean guessWithJava() {
 		boolean withJava;
 		Jdk defJdk = defaultJdkManager().getJdk(null);
-		String javaHome = System.getenv("JAVA_HOME");
+		String javaHome = Settings.getenv("JAVA_HOME");
 		Path javacCmd = Util.searchPath("javac");
 		withJava = defJdk != null
 				&& (javaHome == null

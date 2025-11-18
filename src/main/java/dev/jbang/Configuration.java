@@ -221,7 +221,7 @@ public class Configuration {
 	 */
 	public static Configuration instance() {
 		if (global == null) {
-			String cfgFileName = System.getenv("JBANG_CONFIG");
+			String cfgFileName = Settings.getenv("JBANG_CONFIG");
 			if (cfgFileName != null) {
 				Path cfgFile = Util.getCwd().resolve(cfgFileName);
 				if (Files.isReadable(cfgFile)) {

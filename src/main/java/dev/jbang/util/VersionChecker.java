@@ -142,7 +142,7 @@ public class VersionChecker {
 
 	// Figure out if we should check now or wait for a couple of days
 	private static boolean shouldCheck() {
-		String noVersion = System.getenv().getOrDefault(Settings.ENV_NO_VERSION_CHECK, "false");
+		String noVersion = Settings.getenv().getOrDefault(Settings.ENV_NO_VERSION_CHECK, "false");
 		if (Util.isOffline() || Util.isQuiet() || !noVersion.equalsIgnoreCase("false")) {
 			return false;
 		}

@@ -499,8 +499,8 @@ public class NetUtil {
 
 	private static void addAuthHeaderIfNeeded(URLConnection urlConnection) {
 		String auth = null;
-		if (isAGithubUrl(urlConnection) && System.getenv().containsKey("GITHUB_TOKEN")) {
-			auth = "token " + System.getenv("GITHUB_TOKEN");
+		if (isAGithubUrl(urlConnection) && Settings.getenv().containsKey("GITHUB_TOKEN")) {
+			auth = "token " + Settings.getenv("GITHUB_TOKEN");
 		} else {
 			URL url = urlConnection.getURL();
 			String username;
