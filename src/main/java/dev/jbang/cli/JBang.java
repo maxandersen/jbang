@@ -60,7 +60,7 @@ import picocli.CommandLine.Model.UsageMessageSpec;
 		"" }, versionProvider = VersionProvider.class, subcommands = {
 				Run.class, Build.class, Edit.class, Init.class, Alias.class, Template.class, Catalog.class, Trust.class,
 				Cache.class, Completion.class, Jdk.class, Version.class, Wrapper.class, Info.class, App.class,
-				Export.class, Config.class, Deps.class, Lock.class })
+				Export.class, Config.class, Deps.class, Lock.class, Usage.class })
 public class JBang extends BaseCommand {
 
 	@CommandLine.Option(names = { "-V",
@@ -294,9 +294,9 @@ public class JBang extends BaseCommand {
 				sections = new LinkedHashMap<>();
 				sections.put("Essentials", asList("run", "build"));
 				sections.put("Editing", asList("init", "edit", "deps"));
-				sections.put("Caching", asList("cache", "export", "jdk"));
+				sections.put("Caching", asList("cache", "export", "jdk", "lock"));
 				sections.put("Configuration", asList("config", "trust", "alias", "template", "catalog", "app"));
-				sections.put("Other", asList("completion", "info", "version", "wrapper"));
+				sections.put("Other", asList("completion", "usage", "info", "version", "wrapper"));
 				Map<String, String> cmds = externals();
 				if (!cmds.isEmpty()) {
 					sections.put("External", new ArrayList<>(cmds.keySet()));
