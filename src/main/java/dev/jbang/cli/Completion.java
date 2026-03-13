@@ -105,8 +105,8 @@ public class Completion extends BaseCommand {
 	}
 
 	private static void appendKdlCmd(String name, CommandSpec spec, StringBuilder sb, int depth) {
-		String indent = "  ".repeat(depth);
-		String inner = "  ".repeat(depth + 1);
+		String indent = repeat("  ", depth);
+		String inner = repeat("  ", depth + 1);
 
 		String[] desc = spec.usageMessage().description();
 		String help = (desc != null && desc.length > 0 && !desc[0].isEmpty()) ? desc[0] : "";
@@ -143,7 +143,7 @@ public class Completion extends BaseCommand {
 	}
 
 	private static void appendKdlFlags(CommandSpec spec, StringBuilder sb, int depth, boolean globalScope) {
-		String indent = "  ".repeat(depth);
+		String indent = repeat("  ", depth);
 		for (OptionSpec opt : spec.options()) {
 			if (opt.hidden()) {
 				continue;
@@ -194,7 +194,8 @@ public class Completion extends BaseCommand {
 				line.append(" required=#true");
 			}
 
-			// var (repeatable / multi-value): arity max > 1 or unbounded (Integer.MAX_VALUE)
+			// var (repeatable / multi-value): arity max > 1 or unbounded
+			// (Integer.MAX_VALUE)
 			int maxArity = opt.arity().max();
 			if (maxArity > 1) {
 				line.append(" var=#true");
@@ -210,7 +211,7 @@ public class Completion extends BaseCommand {
 	}
 
 	private static void appendKdlArgs(CommandSpec spec, StringBuilder sb, int depth) {
-		String indent = "  ".repeat(depth);
+		String indent = repeat("  ", depth);
 		for (PositionalParamSpec pos : spec.positionalParameters()) {
 			if (pos.hidden()) {
 				continue;
@@ -246,6 +247,14 @@ public class Completion extends BaseCommand {
 
 			sb.append(line).append("\n");
 		}
+	}
+
+	private static String repeat(String s, int count) {
+		StringBuilder sb = new StringBuilder(s.length() * count);
+		for (int i = 0; i < count; i++) {
+			sb.append(s);
+		}
+		return sb.toString();
 	}
 
 	private static String kdlEscape(String text) {
