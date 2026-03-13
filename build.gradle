@@ -570,8 +570,17 @@ build.dependsOn(copyITests)
 build.dependsOn(chocolatey)
 build.dependsOn(container)
 build.dependsOn(spec)
+task cliusage(type: Exec) {
+	doFirst {
+		println 'Generating jbang.usage.kdl KDL spec for https://usage.jdx.dev/'
+		commandLine 'build/install/jbang/bin/jbang', '--cp', 'build/install/jbang/bin/jbang.jar', 'docs/genusage.java', '--outfile', 'jbang.usage.kdl', '--force', 'dev.jbang.cli.JBang'
+	}
+}
+
 // clidoc not auto included as it depends on jbang...which isn't built at this time.
 //build.dependsOn(clidoc)
+// cliusage not auto included as it depends on jbang...which isn't built at this time.
+//build.dependsOn(cliusage)
 
 compileJava.dependsOn(copyResources);
 compileJava.dependsOn(compileJava9Java);

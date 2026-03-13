@@ -4,22 +4,28 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import picocli.AutoComplete;
 import picocli.CommandLine;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Model.OptionSpec;
+import picocli.CommandLine.Model.PositionalParamSpec;
+import picocli.CommandLine.ScopeType;
 
 @CommandLine.Command(name = "completion", description = {
-		"Generate bash/zsh or fish completion script for ${ROOT-COMMAND-NAME:-the root command of this command}.",
+		"Generate bash/zsh, fish, or usage KDL completion/spec for ${ROOT-COMMAND-NAME:-the root command of this command}.",
 		"Run the following command to give `${ROOT-COMMAND-NAME:-$PARENTCOMMAND}` TAB completion in the current shell:",
 		"",
 		"  bash/zsh: source <(${PARENT-COMMAND-FULL-NAME:-$PARENTCOMMAND} ${COMMAND-NAME})",
 		"",
-		"  fish: eval (<(${PARENT-COMMAND-FULL-NAME:-$PARENTCOMMAND} ${COMMAND-NAME} --shell fish)" })
+		"  fish: eval (<(${PARENT-COMMAND-FULL-NAME:-$PARENTCOMMAND} ${COMMAND-NAME} --shell fish)",
+		"",
+		"  usage KDL spec: ${PARENT-COMMAND-FULL-NAME:-$PARENTCOMMAND} ${COMMAND-NAME} --shell usage > ${ROOT-COMMAND-NAME:-jbang}.usage.kdl" })
 public class Completion extends BaseCommand {
 
 	@Override
@@ -28,7 +34,7 @@ public class Completion extends BaseCommand {
 	}
 
 	@CommandLine.Option(names = { "-s",
-			"--shell" }, description = "The shell to generate the completion script for. Supported shells: bash (zsh) and fish")
+			"--shell" }, description = "The shell to generate the completion script for. Supported shells: bash (zsh), fish, and usage (KDL spec for https://usage.jdx.dev/)")
 	private String shell = "bash";
 
 	public int completion() throws IOException {
@@ -40,6 +46,10 @@ public class Completion extends BaseCommand {
 					spec.parent().commandLine());
 		} else if (shell.equals("fish")) {
 			script = fish(
+					spec.parent().name(),
+					spec.parent().commandLine());
+		} else if (shell.equals("usage")) {
+			script = usageKdl(
 					spec.parent().name(),
 					spec.parent().commandLine());
 		} else {
@@ -54,6 +64,199 @@ public class Completion extends BaseCommand {
 		out.print('\n');
 		out.flush();
 		return EXIT_OK;
+	}
+
+	// -------------------------------------------------------------------------
+	// usage KDL spec generation (https://usage.jdx.dev/)
+	// -------------------------------------------------------------------------
+
+	public static String usageKdl(String scriptName, CommandLine commandLine) {
+		CommandSpec rootSpec = commandLine.getCommandSpec();
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("min_usage_version \"2.11\"\n");
+		sb.append("name \"").append(scriptName).append("\"\n");
+		sb.append("bin \"").append(scriptName).append("\"\n");
+
+		String[] header = rootSpec.usageMessage().header();
+		if (header != null && header.length > 0 && !header[0].isEmpty()) {
+			sb.append("about \"").append(kdlEscape(header[0])).append("\"\n");
+		}
+
+		sb.append("\n");
+		appendKdlFlags(rootSpec, sb, 0, true);
+		appendKdlArgs(rootSpec, sb, 0);
+
+		// Track canonical subcommand names to avoid emitting aliases as separate cmds
+		Set<String> seen = new LinkedHashSet<>();
+		for (Map.Entry<String, CommandLine> entry : rootSpec.subcommands().entrySet()) {
+			CommandSpec sub = entry.getValue().getCommandSpec();
+			if (sub.usageMessage().hidden()) {
+				continue;
+			}
+			String canonicalName = sub.name();
+			if (seen.add(canonicalName)) {
+				sb.append("\n");
+				appendKdlCmd(canonicalName, sub, sb, 0);
+			}
+		}
+
+		return sb.toString();
+	}
+
+	private static void appendKdlCmd(String name, CommandSpec spec, StringBuilder sb, int depth) {
+		String indent = "  ".repeat(depth);
+		String inner = "  ".repeat(depth + 1);
+
+		String[] desc = spec.usageMessage().description();
+		String help = (desc != null && desc.length > 0 && !desc[0].isEmpty()) ? desc[0] : "";
+
+		sb.append(indent).append("cmd \"").append(name).append("\"");
+		if (!help.isEmpty()) {
+			sb.append(" help=\"").append(kdlEscape(help)).append("\"");
+		}
+		sb.append(" {\n");
+
+		// Emit aliases
+		for (String alias : spec.aliases()) {
+			if (!alias.equals(name)) {
+				sb.append(inner).append("alias \"").append(alias).append("\"\n");
+			}
+		}
+
+		appendKdlFlags(spec, sb, depth + 1, false);
+		appendKdlArgs(spec, sb, depth + 1);
+
+		Set<String> seen = new LinkedHashSet<>();
+		for (Map.Entry<String, CommandLine> entry : spec.subcommands().entrySet()) {
+			CommandSpec sub = entry.getValue().getCommandSpec();
+			if (sub.usageMessage().hidden()) {
+				continue;
+			}
+			String canonicalName = sub.name();
+			if (seen.add(canonicalName)) {
+				appendKdlCmd(canonicalName, sub, sb, depth + 1);
+			}
+		}
+
+		sb.append(indent).append("}\n");
+	}
+
+	private static void appendKdlFlags(CommandSpec spec, StringBuilder sb, int depth, boolean globalScope) {
+		String indent = "  ".repeat(depth);
+		for (OptionSpec opt : spec.options()) {
+			if (opt.hidden()) {
+				continue;
+			}
+			// skip built-in help/version options from mixinStandardHelpOptions
+			if (opt.usageHelp() || opt.versionHelp()) {
+				continue;
+			}
+			StringBuilder line = new StringBuilder(indent).append("flag \"");
+
+			// Build the names + optional param label
+			String[] names = opt.names();
+			// Sort: short names first, then long names
+			List<String> shortNames = new ArrayList<>();
+			List<String> longNames = new ArrayList<>();
+			for (String n : names) {
+				if (n.startsWith("--")) {
+					longNames.add(n);
+				} else {
+					shortNames.add(n);
+				}
+			}
+			List<String> orderedNames = new ArrayList<>();
+			orderedNames.addAll(shortNames);
+			orderedNames.addAll(longNames);
+
+			line.append(String.join(" ", orderedNames));
+
+			// Append param label if flag takes a value
+			if (opt.arity().max() != 0 && !opt.paramLabel().isEmpty()) {
+				line.append(" ").append(opt.paramLabel());
+			}
+			line.append("\"");
+
+			// help text
+			String[] optDesc = opt.description();
+			if (optDesc != null && optDesc.length > 0 && !optDesc[0].isEmpty()) {
+				line.append(" help=\"").append(kdlEscape(optDesc[0])).append("\"");
+			}
+
+			// global
+			if (globalScope || opt.scopeType() == ScopeType.INHERIT) {
+				line.append(" global=#true");
+			}
+
+			// required
+			if (opt.required()) {
+				line.append(" required=#true");
+			}
+
+			// var (repeatable / multi-value): arity max > 1 or unbounded (Integer.MAX_VALUE)
+			int maxArity = opt.arity().max();
+			if (maxArity > 1) {
+				line.append(" var=#true");
+			}
+
+			// negate
+			if (opt.negatable()) {
+				line.append(" negate=#true");
+			}
+
+			sb.append(line).append("\n");
+		}
+	}
+
+	private static void appendKdlArgs(CommandSpec spec, StringBuilder sb, int depth) {
+		String indent = "  ".repeat(depth);
+		for (PositionalParamSpec pos : spec.positionalParameters()) {
+			if (pos.hidden()) {
+				continue;
+			}
+			CommandLine.Range arity = pos.arity();
+			boolean required = arity.min() > 0;
+
+			String label = pos.paramLabel();
+			// Strip existing angle/square brackets from picocli's param label
+			label = label.replaceAll("^[<\\[]|[>\\]]$", "");
+
+			boolean variadic = arity.max() > 1;
+
+			String kdlLabel = required ? "<" + label + ">" : "[" + label + "]";
+			if (variadic) {
+				kdlLabel += "...";
+			}
+
+			StringBuilder line = new StringBuilder(indent).append("arg \"").append(kdlLabel).append("\"");
+
+			String[] posDesc = pos.description();
+			if (posDesc != null && posDesc.length > 0 && !posDesc[0].isEmpty()) {
+				line.append(" help=\"").append(kdlEscape(posDesc[0])).append("\"");
+			}
+
+			if (variadic) {
+				line.append(" var=#true");
+			}
+
+			if (!required) {
+				line.append(" required=#false");
+			}
+
+			sb.append(line).append("\n");
+		}
+	}
+
+	private static String kdlEscape(String text) {
+		if (text == null) {
+			return "";
+		}
+		// Remove ANSI-style picocli markup like @|bold foo|@ and ${VAR:-default}
+		text = text.replaceAll("@\\|[^|]+\\|@", "");
+		text = text.replaceAll("\\$\\{[^}]+\\}", "");
+		// Escape backslash and double-quote for KDL string
+		return text.replace("\\", "\\\\").replace("\"", "\\\"").trim();
 	}
 
 	// copied from picocli fish PR https://github.com/remkop/picocli/pull/2463
