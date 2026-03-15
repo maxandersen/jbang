@@ -1,0 +1,13 @@
+target/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+.idea/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+.DS_Store
+Thumbs.db

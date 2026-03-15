@@ -1,0 +1,72 @@
+{
+  "description": "Test cases for path traversal security validation. Shared between TypeScript and Java test suites.",
+  "cases": [
+    {
+      "description": "safe subpath within base",
+      "base": "/tmp/skills-test",
+      "subpath": "/tmp/skills-test/my-skill/SKILL.md",
+      "expectedSafe": true
+    },
+    {
+      "description": "path traversal with ..",
+      "base": "/tmp/skills-test",
+      "subpath": "/tmp/skills-test/../../../etc/passwd",
+      "expectedSafe": false
+    },
+    {
+      "description": "path exactly equal to base",
+      "base": "/tmp/skills-test",
+      "subpath": "/tmp/skills-test",
+      "expectedSafe": true
+    },
+    {
+      "description": "path outside base directory",
+      "base": "/tmp/skills-test",
+      "subpath": "/tmp/other-dir/SKILL.md",
+      "expectedSafe": false
+    },
+    {
+      "description": "path with embedded .. in the middle",
+      "base": "/tmp/skills-test",
+      "subpath": "/tmp/skills-test/sub/../../../etc/passwd",
+      "expectedSafe": false
+    }
+  ],
+  "sanitizeName": [
+    {
+      "description": "safe kebab-case name",
+      "input": "web-design",
+      "expectedOutput": "web-design"
+    },
+    {
+      "description": "strips path separator /",
+      "input": "foo/bar",
+      "expectedOutput": "bar"
+    },
+    {
+      "description": "strips backslash on Windows",
+      "input": "foo\\bar",
+      "expectedOutput": "bar"
+    },
+    {
+      "description": "strips .. traversal",
+      "input": "../etc/passwd",
+      "expectedOutput": "passwd"
+    },
+    {
+      "description": "strips null bytes",
+      "input": "skill\u0000name",
+      "expectedOutput": "skillname"
+    },
+    {
+      "description": "strips leading dots (hidden files)",
+      "input": ".hidden-skill",
+      "expectedOutput": "hidden-skill"
+    },
+    {
+      "description": "replaces special chars with hyphen",
+      "input": "my skill@v2!",
+      "expectedOutput": "my-skill-v2"
+    }
+  ]
+}

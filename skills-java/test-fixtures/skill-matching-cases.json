@@ -1,0 +1,53 @@
+{
+  "description": "Test cases for skill name matching logic. Shared between TypeScript and Java test suites.",
+  "cases": [
+    {
+      "description": "exact match",
+      "skills": ["web-design", "frontend", "test-runner"],
+      "filter": "web-design",
+      "expected": ["web-design"]
+    },
+    {
+      "description": "case-insensitive match",
+      "skills": ["Web-Design", "Frontend"],
+      "filter": "web-design",
+      "expected": ["Web-Design"]
+    },
+    {
+      "description": "multi-word with space separator",
+      "skills": ["web design"],
+      "filter": "web-design",
+      "expected": ["web design"]
+    },
+    {
+      "description": "hyphen vs underscore normalization",
+      "skills": ["web_design"],
+      "filter": "web-design",
+      "expected": ["web_design"]
+    },
+    {
+      "description": "no match returns empty",
+      "skills": ["backend", "database"],
+      "filter": "frontend",
+      "expected": []
+    },
+    {
+      "description": "partial match (contains)",
+      "skills": ["web-design-advanced", "web-design", "backend"],
+      "filter": "web-design",
+      "expected": ["web-design-advanced", "web-design"]
+    },
+    {
+      "description": "empty filter returns all",
+      "skills": ["skill-a", "skill-b"],
+      "filter": "",
+      "expected": ["skill-a", "skill-b"]
+    },
+    {
+      "description": "null/empty skill name is skipped",
+      "skills": ["valid-skill"],
+      "filter": "valid-skill",
+      "expected": ["valid-skill"]
+    }
+  ]
+}

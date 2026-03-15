@@ -1,0 +1,57 @@
+{
+  "description": "Test cases for source URL parsing. Shared between TypeScript and Java test suites.",
+  "cases": [
+    {
+      "description": "GitHub shorthand",
+      "source": "vercel-labs/agent-skills",
+      "expectedProvider": "github",
+      "expectedOwner": "vercel-labs",
+      "expectedRepo": "agent-skills",
+      "expectedBranch": null,
+      "expectedPath": null
+    },
+    {
+      "description": "GitHub HTTPS URL",
+      "source": "https://github.com/vercel-labs/agent-skills",
+      "expectedProvider": "github",
+      "expectedOwner": "vercel-labs",
+      "expectedRepo": "agent-skills",
+      "expectedBranch": null,
+      "expectedPath": null
+    },
+    {
+      "description": "GitHub URL with branch and path",
+      "source": "https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design",
+      "expectedProvider": "github",
+      "expectedOwner": "vercel-labs",
+      "expectedRepo": "agent-skills",
+      "expectedBranch": "main",
+      "expectedPath": "skills/web-design"
+    },
+    {
+      "description": "GitLab URL",
+      "source": "https://gitlab.com/org/my-skills",
+      "expectedProvider": "gitlab"
+    },
+    {
+      "description": "SSH Git URL",
+      "source": "git@github.com:vercel-labs/agent-skills.git",
+      "expectedProvider": "git"
+    },
+    {
+      "description": "Local path with ./",
+      "source": "./my-local-skills",
+      "expectedProvider": "local"
+    },
+    {
+      "description": "Local absolute path",
+      "source": "/home/user/skills",
+      "expectedProvider": "local"
+    },
+    {
+      "description": "Well-known HTTPS URL",
+      "source": "https://example.com/.well-known/skills/",
+      "expectedProvider": "wellknown"
+    }
+  ]
+}

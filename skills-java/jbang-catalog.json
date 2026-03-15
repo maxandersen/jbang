@@ -1,0 +1,9 @@
+{
+  "aliases": {
+    "skills": {
+      "script-ref": "sh.skills:skills-java:LATEST",
+      "description": "The CLI for the open agent skills ecosystem (Java port of vercel-labs/skills)"
+    }
+  },
+  "description": "skills-java - Java port of vercel-labs/skills CLI"
+}

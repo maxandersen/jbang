@@ -1,0 +1,157 @@
+name: Upstream Sync Check
+
+on:
+  schedule:
+    # Run every Monday at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force check even if no changes detected'
+        required: false
+        default: 'false'
+
+jobs:
+  check-upstream:
+    name: Check vercel-labs/skills for updates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch upstream SHA
+        id: upstream
+        run: |
+          SHA=$(curl -s \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/vercel-labs/skills/commits/main" \
+            | jq -r '.sha')
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          echo "Latest upstream SHA: $SHA"
+
+      - name: Read stored SHA
+        id: stored
+        run: |
+          if [ -f upstream.lock ]; then
+            STORED=$(jq -r '.lastSyncedSha' upstream.lock)
+            echo "sha=$STORED" >> $GITHUB_OUTPUT
+            echo "Stored SHA: $STORED"
+          else
+            echo "sha=none" >> $GITHUB_OUTPUT
+            echo "No upstream.lock found"
+          fi
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ "${{ steps.upstream.outputs.sha }}" != "${{ steps.stored.outputs.sha }}" ] || \
+             [ "${{ github.event.inputs.force }}" == "true" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No upstream changes detected."
+          fi
+
+      - name: Get changed files
+        if: steps.changes.outputs.has_changes == 'true'
+        id: diff
+        run: |
+          STORED="${{ steps.stored.outputs.sha }}"
+          LATEST="${{ steps.upstream.outputs.sha }}"
+
+          if [ "$STORED" == "none" ]; then
+            DIFF_SUMMARY="Initial sync - no previous SHA to compare"
+          else
+            DIFF_SUMMARY=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/vercel-labs/skills/compare/${STORED}...${LATEST}" \
+              | jq -r '.files[].filename' 2>/dev/null | head -20 || echo "Could not fetch diff")
+          fi
+
+          # Escape for multiline output
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF_SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Issue
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const upstreamSha = '${{ steps.upstream.outputs.sha }}';
+            const storedSha = '${{ steps.stored.outputs.sha }}';
+            const diffSummary = `${{ steps.diff.outputs.summary }}`;
+
+            // Check if an open issue already exists for this SHA
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'upstream-sync'
+            });
+
+            const existingIssue = issues.data.find(i =>
+              i.title.includes(upstreamSha.substring(0, 8))
+            );
+
+            if (existingIssue) {
+              console.log(`Issue already exists: #${existingIssue.number}`);
+              return;
+            }
+
+            const compareUrl = storedSha !== 'none'
+              ? `https://github.com/vercel-labs/skills/compare/${storedSha}...${upstreamSha}`
+              : `https://github.com/vercel-labs/skills/commits/${upstreamSha}`;
+
+            const body = `## Upstream Update Detected
+
+            The upstream repository [vercel-labs/skills](https://github.com/vercel-labs/skills) has been updated.
+
+            **New SHA:** \`${upstreamSha}\`
+            **Previous SHA:** \`${storedSha}\`
+
+            **View changes:** ${compareUrl}
+
+            **Changed files:**
+            \`\`\`
+            ${diffSummary}
+            \`\`\`
+
+            ### Action Required
+
+            1. Review the upstream changes in the link above
+            2. Identify which changes need to be ported to this Java implementation
+            3. Create a PR with the necessary updates
+            4. Update \`upstream.lock\` with the new SHA after porting
+
+            ---
+            *This issue was automatically created by the upstream-sync workflow.*`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Upstream update: vercel-labs/skills @ ${upstreamSha.substring(0, 8)}`,
+              body: body,
+              labels: ['upstream-sync', 'enhancement']
+            });
+
+            console.log('Created upstream sync issue');
+
+      - name: Update upstream.lock
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          cat > upstream.lock << EOF
+          {
+            "repo": "vercel-labs/skills",
+            "lastSyncedSha": "${{ steps.upstream.outputs.sha }}",
+            "lastChecked": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add upstream.lock
+          git diff --cached --quiet || git commit -m "chore: update upstream.lock to ${{ steps.upstream.outputs.sha }}"
+          git push

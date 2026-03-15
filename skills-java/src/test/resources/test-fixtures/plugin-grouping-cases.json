@@ -1,0 +1,51 @@
+{
+  "description": "Test cases for plugin manifest grouping. Shared between TypeScript and Java test suites.",
+  "cases": [
+    {
+      "description": "basic plugin manifest with single plugin",
+      "manifest": {
+        "metadata": {"pluginRoot": "./plugins"},
+        "plugins": [
+          {
+            "name": "my-plugin",
+            "source": "my-plugin",
+            "skills": ["./skills/review", "./skills/test"]
+          }
+        ]
+      },
+      "expectedSkillPaths": ["./plugins/my-plugin/skills/review", "./plugins/my-plugin/skills/test"]
+    },
+    {
+      "description": "manifest without metadata uses default root",
+      "manifest": {
+        "plugins": [
+          {
+            "name": "plugin-a",
+            "source": "plugin-a",
+            "skills": ["./skills/analyze"]
+          }
+        ]
+      },
+      "expectedSkillPaths": ["./plugin-a/skills/analyze"]
+    },
+    {
+      "description": "manifest with multiple plugins",
+      "manifest": {
+        "metadata": {"pluginRoot": "."},
+        "plugins": [
+          {
+            "name": "plugin-a",
+            "source": "plugin-a",
+            "skills": ["./skills/skill-a"]
+          },
+          {
+            "name": "plugin-b",
+            "source": "plugin-b",
+            "skills": ["./skills/skill-b"]
+          }
+        ]
+      },
+      "expectedSkillCount": 2
+    }
+  ]
+}
