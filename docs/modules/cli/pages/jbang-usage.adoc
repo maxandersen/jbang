@@ -1,0 +1,47 @@
+= jbang usage
+:doctype: book
+:toc: macro
+:toclevels: 2
+:icons: font
+
+== Name
+
+`jbang usage` - Export the current jbang command tree to a https://usage.jdx.dev/[Usage] KDL specification.
+
+== Synopsis
+
+```
+jbang usage [--include-hidden] [--root <command path>] [-o <file>]
+```
+
+All global jbang options (for example `--config`, `--insecure`, `--offline`, `--fresh`, `--quiet`, `--verbose`, `--stacktrace`) are also accepted.
+
+== Description
+
+The `usage` command inspects the live picocli command model and emits a Usage-spec-compliant KDL document. That document can then be fed to the Usage tooling to generate completions, documentation, scripts, and more while staying in sync with jbang.
+
+* By default the entire CLI (root `jbang` command and all subcommands) is exported.
+* Use `--root` to limit the export to a specific subcommand hierarchy (for example `jbang usage --root "catalog add"`).
+* Use `--include-hidden` when you also want hidden commands/options in the spec.
+* When `-o/--out` is omitted the spec is printed to stdout, making it easy to pipe directly into `usage markdown`, `usage completions`, etc.
+
+== Options
+
+[cols="1,3"]
+|===
+|`-o`, `--out <file>`|Write the generated KDL to the provided file instead of stdout. Parent directories are created automatically.
+|`--include-hidden`|Include commands, flags, and positional arguments that are marked as hidden.
+|`--root <command>`|Only export the specified subcommand path. Tokens are space separated (e.g. `"catalog add"`).
+|===
+
+== Examples
+
+.Export the full CLI and immediately render it to Markdown via the Usage CLI
+```
+jbang usage | usage markdown > CLI.md
+```
+
+.Export only the `jbang run` command tree and write it to a file
+```
+jbang usage --root run --out build/jbang-run.usage.kdl
+```
