@@ -167,7 +167,7 @@ public class Edit extends BaseCommand {
 			ProjectBuilder pb = createProjectBuilder();
 			final Project prj = pb.build(scriptMixin.scriptOrFile);
 
-			if (prj.isJar() || prj.getMainSourceSet().getSources().isEmpty()) {
+			if (prj.isJar() || prj.isWar() || prj.getMainSourceSet().getSources().isEmpty()) {
 				throw new ExitException(EXIT_INVALID_INPUT, "You can only edit source files");
 			}
 

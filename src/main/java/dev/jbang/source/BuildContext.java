@@ -57,7 +57,7 @@ public class BuildContext {
 	public Path getJarFile() {
 		if (project.isJShell()) {
 			return null;
-		} else if (project.isJar()) {
+		} else if (project.isJar() || project.isWar()) {
 			return project.getResourceRef().getFile();
 		} else {
 			return getBasePath(".jar");

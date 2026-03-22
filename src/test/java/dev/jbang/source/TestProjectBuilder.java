@@ -147,6 +147,25 @@ public class TestProjectBuilder extends BaseTest {
 	}
 
 	@Test
+	void testWar() {
+		ProjectBuilder pb = Project.builder();
+		Path src = examplesTestFolder.resolve("hellowar.war");
+		Project prj = pb.build(src);
+		assertThat(prj.getDescription().isPresent(), equalTo(Boolean.FALSE));
+		assertThat(prj.getRuntimeOptions(), iterableWithSize(0));
+		assertThat(prj.getMainSourceSet().getSources(), iterableWithSize(0));
+		assertThat(prj.getMainSourceSet().getResources(), iterableWithSize(0));
+		assertThat(prj.getMainSourceSet().getDependencies(), iterableWithSize(0));
+		assertThat(prj.getRepositories(), iterableWithSize(0));
+		assertThat(prj.getMainSourceSet().getClassPaths(), iterableWithSize(0));
+		assertThat(prj.getProperties(), anEmptyMap());
+		assertThat(prj.getJavaVersion(), equalTo("8+"));
+		assertThat(prj.getMainClass(), equalTo("helloworld"));
+		assertThat(prj.isWar(), is(Boolean.TRUE));
+		assertThat(prj.isJar(), is(Boolean.FALSE));
+	}
+
+	@Test
 	void testGAV() {
 		ProjectBuilder pb = Project.builder();
 		String gav = "org.eclipse.jgit:org.eclipse.jgit.pgm:5.9.0.202009080501-r";

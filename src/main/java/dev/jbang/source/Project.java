@@ -330,6 +330,14 @@ public class Project {
 		return backingFile != null && backingFile.toString().endsWith(".jar");
 	}
 
+	public boolean isWar() {
+		return Project.isWar(getResourceRef().getFile());
+	}
+
+	static boolean isWar(Path backingFile) {
+		return backingFile != null && backingFile.toString().endsWith(".war");
+	}
+
 	public boolean isJShell() {
 		return Project.isJShell(getResourceRef().getFile());
 	}
