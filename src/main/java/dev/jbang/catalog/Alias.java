@@ -177,9 +177,14 @@ public class Alias extends CatalogItem {
 	 * @return An Alias object or null if no alias was found
 	 */
 	public static Alias get(String aliasName) {
+		String version = parseVersion(aliasName);
+		String lookupName = stripVersion(aliasName);
 		HashSet<String> names = new HashSet<>();
 		Alias alias = new Alias();
-		Alias result = merge(alias, aliasName, Alias::getLocal, names);
+		Alias result = merge(alias, lookupName, Alias::getLocal, names);
+		if (result.scriptRef != null && version != null) {
+			result = result.withScriptRef(applyVersion(result.scriptRef, version));
+		}
 		return result.scriptRef != null ? result : null;
 	}
 
@@ -192,10 +197,84 @@ public class Alias extends CatalogItem {
 	 * @return An Alias object or null if no alias was found
 	 */
 	public static Alias get(Catalog catalog, String aliasName) {
+		String version = parseVersion(aliasName);
+		String lookupName = stripVersion(aliasName);
 		HashSet<String> names = new HashSet<>();
 		Alias alias = new Alias();
-		Alias result = merge(alias, aliasName, catalog.aliases::get, names);
+		Alias result = merge(alias, lookupName, catalog.aliases::get, names);
+		if (result.scriptRef != null && version != null) {
+			result = result.withScriptRef(applyVersion(result.scriptRef, version));
+		}
 		return result.scriptRef != null ? result : null;
+	}
+
+	/**
+	 * Parses the version from an alias name of the form {@code alias:version@catalog}.
+	 * Version pinning is only supported when a catalog is specified (i.e. the
+	 * {@code @catalog} part must be present) and the alias part contains exactly
+	 * one colon (to avoid ambiguity with Maven GAV coordinates).
+	 *
+	 * @param aliasName The alias name potentially containing a version
+	 * @return The version string, or null if no version was found
+	 */
+	static String parseVersion(String aliasName) {
+		String[] atParts = aliasName.split("@", 2);
+		if (atParts.length == 2 && !atParts[1].isEmpty()) {
+			String aliasWithVersion = atParts[0];
+			int colonIdx = aliasWithVersion.indexOf(':');
+			// Only treat as alias:version if there is exactly one colon (more colons
+			// indicate a Maven GAV like G:A:V)
+			if (colonIdx > 0 && aliasWithVersion.indexOf(':', colonIdx + 1) < 0) {
+				return aliasWithVersion.substring(colonIdx + 1);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Strips the version from an alias name of the form {@code alias:version@catalog},
+	 * returning {@code alias@catalog}.
+	 *
+	 * @param aliasName The alias name potentially containing a version
+	 * @return The alias name without the version component
+	 */
+	static String stripVersion(String aliasName) {
+		String[] atParts = aliasName.split("@", 2);
+		if (atParts.length == 2 && !atParts[1].isEmpty()) {
+			String aliasWithVersion = atParts[0];
+			int colonIdx = aliasWithVersion.indexOf(':');
+			if (colonIdx > 0 && aliasWithVersion.indexOf(':', colonIdx + 1) < 0) {
+				return aliasWithVersion.substring(0, colonIdx) + "@" + atParts[1];
+			}
+		}
+		return aliasName;
+	}
+
+	/**
+	 * Applies a version to a script reference. For Maven GAV coordinates the
+	 * version component is replaced. For GitHub URLs the branch/tag segment in
+	 * the URL path is replaced.
+	 *
+	 * @param scriptRef The original script reference
+	 * @param version   The version to apply
+	 * @return The script reference with the version applied
+	 */
+	static String applyVersion(String scriptRef, String version) {
+		if (DependencyUtil.looksLikeAGav(scriptRef)) {
+			// Replace the version segment in G:A:V[:C][@T] while preserving classifier and type
+			return scriptRef.replaceFirst(
+					"^([^:]+:[^:]+:)[^:@]*(.*)",
+					"$1" + version + "$2");
+		} else if (scriptRef.startsWith("https://github.com/") && scriptRef.contains("/blob/")) {
+			return scriptRef.replaceFirst(
+					"^(https://github\\.com/[^/]+/[^/]+/blob/)[^/]+(/.*)$",
+					"$1" + version + "$2");
+		} else if (scriptRef.startsWith("https://raw.githubusercontent.com/")) {
+			return scriptRef.replaceFirst(
+					"^(https://raw\\.githubusercontent\\.com/[^/]+/[^/]+/)[^/]+(/.*)$",
+					"$1" + version + "$2");
+		}
+		return scriptRef;
 	}
 
 	private static Alias merge(Alias a1, String name, Function<String, Alias> findUnqualifiedAlias,
