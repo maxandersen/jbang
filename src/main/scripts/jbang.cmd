@@ -28,7 +28,10 @@ if "!binaryPath!"=="" (
   )
 )
 if "!binaryPath!"=="" if "!jarPath!"=="" (
-  if not exist "%JBDIR%\bin\jbang.jar" (
+  set needsInstall=false
+  if not exist "%JBDIR%\bin\jbang.jar" set needsInstall=true
+  if "%JBANG_USE_NATIVE%"=="true" if not exist "%JBDIR%\bin\jbang.bin.exe" set needsInstall=true
+  if "!needsInstall!"=="true" (
     powershell -NoProfile -ExecutionPolicy Bypass -NonInteractive -Command "%~dp0jbang.ps1 version" > nul
     if !ERRORLEVEL! NEQ 0 ( exit /b %ERRORLEVEL% )
   )
@@ -43,6 +46,11 @@ if exist "%jarPath%.new" (
   rem a new jbang version was found, we replace the old one with it
   copy /y "%jarPath%.new" "%jarPath%" > nul 2>&1
   del /f /q "%jarPath%.new"
+)
+
+if "%JBANG_USE_NATIVE%"=="true" if exist "%~dp0jbang.bin.exe.new" (
+  copy /y "%~dp0jbang.bin.exe.new" "%~dp0jbang.bin.exe" > nul 2>&1
+  del /f /q "%~dp0jbang.bin.exe.new"
 )
 
 rem Find/get a JDK (only needed for JAR execution)
