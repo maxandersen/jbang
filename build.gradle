@@ -471,8 +471,8 @@ task copyTestResources(type: Copy) {
 processTestResources.dependsOn copyTestResources
 
 task createChecksum(type: Checksum) {
-	dependsOn(assembleDist, tasks.named('nativeDistZip'), tasks.named('nativeDistTar'))
-	files = files([distZip, latestDistZip, distTar, latestDistTar, tasks.named('nativeDistZip').get(), tasks.named('nativeDistTar').get()].collectMany { it.outputs.files.files })
+	dependsOn(assembleDist)
+	files = files([distZip, latestDistZip, distTar, latestDistTar].outputs.files.flatten())
 	outputDir = distZip.destinationDirectory.asFile.get()
 	algorithm = Checksum.Algorithm.SHA256
 }

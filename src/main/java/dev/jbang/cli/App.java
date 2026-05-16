@@ -259,7 +259,8 @@ class AppInstall extends BaseBuildCommand {
 	}
 
 	private static String getNativeBundleUrl() {
-		return getDownloadBaseUrl() + "/latest/download/jbang-" + getNativeBundleOs() + "-" + getNativeBundleArch() + "." + getBundleExtension();
+		return getDownloadBaseUrl() + "/latest/download/jbang-" + getNativeBundleOs() + "-" + getNativeBundleArch()
+				+ "." + getBundleExtension();
 	}
 
 	public static boolean installJBang(boolean force) throws IOException {

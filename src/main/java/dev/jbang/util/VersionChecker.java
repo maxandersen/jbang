@@ -194,7 +194,8 @@ public class VersionChecker {
 			new URL(jbangVersionUrl);
 			return jbangVersionUrl;
 		} catch (MalformedURLException e) {
-			throw new IllegalArgumentException("Invalid JBANG_DOWNLOAD_BASEURL-derived version URL: " + jbangVersionUrl, e);
+			throw new IllegalArgumentException("Invalid JBANG_DOWNLOAD_BASEURL-derived version URL: " + jbangVersionUrl,
+					e);
 		}
 	}
 
