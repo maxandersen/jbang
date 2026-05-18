@@ -97,6 +97,8 @@ function Get-NativeExecName {
     return "jbang.bin.exe"
 }
 
+# Keep in sync with src/main/java/dev/jbang/cli/App.java:getNativeBundleArch()
+# and src/main/scripts/jbang:native_bundle_arch()
 function Get-NativeBundleArch {
     switch ($arch) {
         "x86_64" { return "x64" }

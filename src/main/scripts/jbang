@@ -44,6 +44,8 @@ native_exec_name() {
   fi
 }
 
+# Keep in sync with src/main/java/dev/jbang/cli/App.java:getNativeBundleArch()
+# and src/main/scripts/jbang.ps1:Get-NativeBundleArch
 native_bundle_arch() {
   case "$arch" in
     x86_64|amd64)

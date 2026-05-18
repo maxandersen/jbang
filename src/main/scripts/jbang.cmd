@@ -4,6 +4,11 @@ SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 rem The Java version to install when it's not installed on the system yet
 if "%JBANG_DEFAULT_JAVA_VERSION%"=="" (set javaVersion=17) else (set javaVersion=%JBANG_DEFAULT_JAVA_VERSION%)
 
+rem Optional base URL override for testing bundle/version downloads locally.
+rem Defaults to the public GitHub release location.
+rem Example: set JBANG_DOWNLOAD_BASEURL=http://localhost:18080
+if "%JBANG_DOWNLOAD_BASEURL%"=="" (set JBANG_DOWNLOAD_BASEURL=https://github.com/jbangdev/jbang/releases)
+
 if "%JBANG_DIR%"=="" (set JBDIR=%userprofile%\.jbang) else (set JBDIR=%JBANG_DIR%)
 if "%JBANG_CACHE_DIR%"=="" (set TDIR=%JBDIR%\cache) else (set TDIR=%JBANG_CACHE_DIR%)
 if "%JBANG_USE_NATIVE%"=="" (set JBANG_USE_NATIVE=false)

@@ -205,8 +205,9 @@ public class VersionChecker {
 		List<String> lines = Files.readAllLines(versionFile);
 		if (!lines.isEmpty()) {
 			return lines.get(0);
+		} else {
+			return null;
 		}
-		return null;
 	}
 
 	private static int compareVersions(String v1, String v2) {
