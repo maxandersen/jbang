@@ -1,0 +1,89 @@
+# PR/issue cleanup → next release (v0.144.0)
+
+Snapshot: 2026-11-21. 67 open PRs, 357 open issues. Last release v0.143.0 (2026-10-30).
+
+Goal: shrink the PR queue to things that are actually alive, merge what's ready, and cut a release.
+
+## Already on main since v0.143.0 (15 commits)
+
+- feat: clearer, grouped help output with prose and examples ([#2702](https://github.com/jbangdev/jbang/pull/2702))
+- feat: add `jbang skill` command to install agent skills ([#2692](https://github.com/jbangdev/jbang/pull/2692))
+- feat: let aesh built-in `--aesh-*` commands work with their arguments
+- fix: only force colors in the bash launcher when stdout is a terminal ([#2703](https://github.com/jbangdev/jbang/pull/2703))
+- fix: make `app setup --java/--no-java` usable as flags ([#2701](https://github.com/jbangdev/jbang/pull/2701))
+- fix: honour attached value for `-d` and reject invalid ones ([#2700](https://github.com/jbangdev/jbang/pull/2700))
+- fix: avoid duplicated valid values in `--source-type` help ([#2694](https://github.com/jbangdev/jbang/pull/2694))
+- fix: align genadoc.java aesh version and add `--format` option ([#2699](https://github.com/jbangdev/jbang/pull/2699))
+- build: aesh / readline-api 3.18.1 ([#2693](https://github.com/jbangdev/jbang/pull/2693))
+- refactor/test: validateArguments() hook ([#2695](https://github.com/jbangdev/jbang/pull/2695)), checkedRun harness ([#2696](https://github.com/jbangdev/jbang/pull/2696)), color test isolation ([#2711](https://github.com/jbangdev/jbang/pull/2711)), spotless for gradle files ([#2708](https://github.com/jbangdev/jbang/pull/2708))
+
+## Phase 1 — merge what's ready
+
+| PR | What | Status | Action |
+|---|---|---|---|
+| [#2709](https://github.com/jbangdev/jbang/pull/2709) | fix: separate merged fatjar service providers (fixes [#2704](https://github.com/jbangdev/jbang/issues/2704)) | approved, mergeable, green; **verified**: no-newline test fails without fix (`Impl1Impl2`), passes with it | [x] merged 660949d3 (squash); [#2704](https://github.com/jbangdev/jbang/issues/2704) closed; all-contributors PR [#2719](https://github.com/jbangdev/jbang/pull/2719) |
+| [#2623](https://github.com/jbangdev/jbang/pull/2623) | fix: `jbang build --native` from existing/pre-built jar | approved, mergeable, green (but 45 behind main, CI from Jul). mkdirs is on jbang's *build cache* dir (same as `compileDir.mkdirs()` does implicitly for source builds), not user output — `--force` convention n/a; `export native` still enforces `--force`. Nit: prefer `Files.createDirectories()` over `toFile().mkdirs()` (silently ignores failure) | [ ] nit, rerun CI, merge |
+| [#2620](https://github.com/jbangdev/jbang/pull/2620) | feat: prefer relative symbolic links | approved, mergeable, green | [ ] merge |
+| [#2688](https://github.com/jbangdev/jbang/pull/2688) | chore(deps): actions/checkout digest | renovate | [ ] merge |
+| [#2689](https://github.com/jbangdev/jbang/pull/2689) | chore(deps): actions/download-artifact digest | renovate | [ ] merge |
+| [#2715](https://github.com/jbangdev/jbang/pull/2715) | build: tests on latest GA + EA JDK (ours) | green, waiting on quintesse | [ ] merge once reviewed |
+| [#2616](https://github.com/jbangdev/jbang/pull/2616) | fix: honor JBANG_USE_NATIVE when updating | approved but CONFLICTING | [ ] rebase, then merge |
+
+## Phase 2 — review incoming contributions
+
+| PR | What | Notes | Decision |
+|---|---|---|---|
+| [#2718](https://github.com/jbangdev/jbang/pull/2718) | fix: upgrade vulnerable jsoup and HTTP deps | **security**, review first | [ ] |
+| [#2717](https://github.com/jbangdev/jbang/pull/2717) / [#2613](https://github.com/jbangdev/jbang/pull/2613) | avoid misleading update messages ([#2609](https://github.com/jbangdev/jbang/issues/2609)) | **duplicates** — pick one, close the other | [ ] |
+| [#2716](https://github.com/jbangdev/jbang/pull/2716) | feat: `//VARS` and `//PROPS` directives | 1 failing check; new directive = needs design OK + docs | [ ] |
+| [#2713](https://github.com/jbangdev/jbang/pull/2713) | fix: deserialize catalog refs without mutating final fields | 1 failing check | [ ] |
+| [#2697](https://github.com/jbangdev/jbang/pull/2697) | docs: identify JBang apps in VisualVM | docs only | [ ] |
+| [#2677](https://github.com/jbangdev/jbang/pull/2677) / [#2678](https://github.com/jbangdev/jbang/pull/2678) | fix: BOM deps / exclusions in generated POM for Quarkus native | related, review together | [ ] |
+| [#2650](https://github.com/jbangdev/jbang/pull/2650) | fix: pass system properties to native images | mergeable | [ ] |
+| [#2643](https://github.com/jbangdev/jbang/pull/2643) | feat: `jbang.source` and `jbang.dir` | mergeable | [ ] |
+| [#2658](https://github.com/jbangdev/jbang/pull/2658) | fix: wrapper file timestamps current time instead of 1980 | mergeable | [ ] |
+| [#2634](https://github.com/jbangdev/jbang/pull/2634) | fix: honor //JAVA version in `edit --sandbox` gradle | mergeable | [ ] |
+| [#2629](https://github.com/jbangdev/jbang/pull/2629) | fix: deps search hanging on Windows | mergeable | [ ] |
+| [#2460](https://github.com/jbangdev/jbang/pull/2460) | fix: double searchPath call, full editor path on Windows | mergeable | [ ] |
+| [#2598](https://github.com/jbangdev/jbang/pull/2598) | fix: package native binaries with Homebrew ([#2548](https://github.com/jbangdev/jbang/issues/2548)) | mergeable | [ ] |
+| [#2626](https://github.com/jbangdev/jbang/pull/2626) | docs: installing jbang as a native binary | mergeable | [ ] |
+| [#2625](https://github.com/jbangdev/jbang/pull/2625) | docs: add a jbang agent skill | likely superseded by [#2692](https://github.com/jbangdev/jbang/pull/2692) (`jbang skill`) → close? | [ ] |
+| [#2494](https://github.com/jbangdev/jbang/pull/2494) | chore(deps): asciidoctor gradle plugin v4 | renovate, since May | [ ] |
+| [#2675](https://github.com/jbangdev/jbang/pull/2675) | fix: reuse cached catalogs when refresh can't connect | CHANGES_REQUESTED since Oct | [ ] ping or close |
+| [#2668](https://github.com/jbangdev/jbang/pull/2668) | feat: info source-jar / source-path | CHANGES_REQUESTED + conflicting | [ ] ping or close |
+| [#2450](https://github.com/jbangdev/jbang/pull/2450), [#2449](https://github.com/jbangdev/jbang/pull/2449) | Windows USERPROFILE / cache clear deletes deps | CHANGES_REQUESTED + conflicting since spring | [ ] ping or close |
+
+Conflicting external PRs needing a rebase or a close: [#2691](https://github.com/jbangdev/jbang/pull/2691), [#2667](https://github.com/jbangdev/jbang/pull/2667), [#2660](https://github.com/jbangdev/jbang/pull/2660), [#2633](https://github.com/jbangdev/jbang/pull/2633), [#2618](https://github.com/jbangdev/jbang/pull/2618), [#2615](https://github.com/jbangdev/jbang/pull/2615), [#2580](https://github.com/jbangdev/jbang/pull/2580).
+wfouche drafts: [#2666](https://github.com/jbangdev/jbang/pull/2666) (upx), [#2655](https://github.com/jbangdev/jbang/pull/2655) (superseded by [#2708](https://github.com/jbangdev/jbang/pull/2708)?), [#2653](https://github.com/jbangdev/jbang/pull/2653)/[#2654](https://github.com/jbangdev/jbang/pull/2654) (Gradle 9.7.1).
+
+## Phase 3 — own PRs (maxandersen)
+
+Keep / finish:
+- [ ] [#2657](https://github.com/jbangdev/jbang/pull/2657) build file as JBang dependency — mergeable, needs reviewer
+- [ ] [#2640](https://github.com/jbangdev/jbang/pull/2640) verify SHA-256 of downloaded JBang archive — mergeable, needs reviewer
+- [ ] [#2479](https://github.com/jbangdev/jbang/pull/2479) warn when --sources/--files used with executable archives — 3 failing checks
+
+Decide keep vs close (drafts / conflicting / stale):
+- [#2674](https://github.com/jbangdev/jbang/pull/2674) crema spike, [#2662](https://github.com/jbangdev/jbang/pull/2662) modular jars, [#2646](https://github.com/jbangdev/jbang/pull/2646) template {basename}, [#2599](https://github.com/jbangdev/jbang/pull/2599) jandex 3.6, [#2566](https://github.com/jbangdev/jbang/pull/2566) JReleaser PR builds,
+  [#2531](https://github.com/jbangdev/jbang/pull/2531) config tab-completion, [#2528](https://github.com/jbangdev/jbang/pull/2528) RequestedVersionComparator typo (small, real bug!), [#2522](https://github.com/jbangdev/jbang/pull/2522) lock/digest,
+  [#2503](https://github.com/jbangdev/jbang/pull/2503) `jbang docs`, [#2501](https://github.com/jbangdev/jbang/pull/2501) Allure 3, [#2467](https://github.com/jbangdev/jbang/pull/2467) native-aware wrapper, [#2437](https://github.com/jbangdev/jbang/pull/2437) missing template files,
+  [#2388](https://github.com/jbangdev/jbang/pull/2388) scala (8 failing), [#2326](https://github.com/jbangdev/jbang/pull/2326) errorprone (12 failing), [#2254](https://github.com/jbangdev/jbang/pull/2254) print commands, [#2153](https://github.com/jbangdev/jbang/pull/2153) resource refs,
+  [#1888](https://github.com/jbangdev/jbang/pull/1888) progress bar POC, [#1839](https://github.com/jbangdev/jbang/pull/1839) remote file args in compiler args
+
+## Phase 4 — quintesse's old PRs
+
+Ask quintesse to keep or close: [#2656](https://github.com/jbangdev/jbang/pull/2656) (same-version JDKs, conflicting), [#2247](https://github.com/jbangdev/jbang/pull/2247), [#1913](https://github.com/jbangdev/jbang/pull/1913), [#1634](https://github.com/jbangdev/jbang/pull/1634), [#1508](https://github.com/jbangdev/jbang/pull/1508), [#1313](https://github.com/jbangdev/jbang/pull/1313).
+
+## Phase 5 — issues (not blocking the release)
+
+- 357 open: 92 `ideas`, 58 `bug`; 129 date from 2020–21.
+- Only 1 opened / 1 closed in the last 2 weeks.
+- [ ] Close issues fixed by merged PRs (e.g. [#2704](https://github.com/jbangdev/jbang/issues/2704) via [#2709](https://github.com/jbangdev/jbang/pull/2709), [#2609](https://github.com/jbangdev/jbang/issues/2609) via [#2613](https://github.com/jbangdev/jbang/pull/2613)/[#2717](https://github.com/jbangdev/jbang/pull/2717))
+- [ ] Later: bulk-triage 2020–21 issues (stale bot or a manual sweep)
+
+## Phase 6 — release
+
+- [ ] main CI green (incl. new latest/EA JDK jobs)
+- [ ] smoke test early-access build
+- [ ] release notes from merged PRs
+- [ ] tag + release (tag-and-release workflow)
