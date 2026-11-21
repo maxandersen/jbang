@@ -1,6 +1,6 @@
 # PR/issue cleanup → next release (v0.144.0)
 
-Snapshot: 2026-11-21. 67 open PRs, 357 open issues. Last release v0.143.0 (2026-10-30).
+Snapshot: 2026-11-21 (updated same day, evening). 67 open PRs, 357 open issues. Last release v0.143.0 (2026-10-30).
 
 Goal: shrink the PR queue to things that are actually alive, merge what's ready, and cut a release.
 
@@ -33,10 +33,10 @@ Goal: shrink the PR queue to things that are actually alive, merge what's ready,
 
 | PR | What | Notes | Decision |
 |---|---|---|---|
-| [#2718](https://github.com/jbangdev/jbang/pull/2718) | fix: upgrade vulnerable jsoup and HTTP deps | **security**, review first | [ ] |
-| [#2717](https://github.com/jbangdev/jbang/pull/2717) / [#2613](https://github.com/jbangdev/jbang/pull/2613) | avoid misleading update messages ([#2609](https://github.com/jbangdev/jbang/issues/2609)) | **duplicates** — pick one, close the other | [ ] |
+| [#2718](https://github.com/jbangdev/jbang/pull/2718) | fix: upgrade vulnerable jsoup and HTTP deps | **security**. jsoup CVEs (CVE-2026-75140, -71497) not reachable in jbang (only HTML parser used); httpclient5/httpcore5 CVEs (CVE-2026-40542, -64607, -54399, -54428) are real, fixed via a temporary constraint to httpclient5-cache 5.6.4 | [x] approved + merged 107ac040 (squash). Proper fix: [jbang-devkitman#116](https://github.com/jbangdev/jbang-devkitman/pull/116) → release devkitman → bump `devkitmanVersion` and drop the `constraints {}` block |
+| [#2717](https://github.com/jbangdev/jbang/pull/2717) / [#2613](https://github.com/jbangdev/jbang/pull/2613) | avoid misleading update messages ([#2609](https://github.com/jbangdev/jbang/issues/2609)) | picked #2717 (complete + tests); #2613 symptom-only | [~] #2613 closed as superseded; #2717 changes requested: add `version --update --force` (needed for #2616 jar→native switch / repair), offline fallback for unmanaged, docs in installation.adoc; nits: public test hooks. Rebase after #2616 |
 | [#2716](https://github.com/jbangdev/jbang/pull/2716) | feat: `//VARS` and `//PROPS` directives | 1 failing check; new directive = needs design OK + docs | [ ] |
-| [#2713](https://github.com/jbangdev/jbang/pull/2713) | fix: deserialize catalog refs without mutating final fields | 1 failing check | [ ] |
+| [#2713](https://github.com/jbangdev/jbang/pull/2713) | fix: deserialize catalog refs without mutating final fields ([#2671](https://github.com/jbangdev/jbang/issues/2671)) | macOS native failure was artifact-upload ETIMEDOUT (rerun green). Found same Java 26 final-field bug in `IntegrationInput`/`IntegrationResult` (reproduced on JDK 26.0.1: warning with jbang on 21 running `//JAVA 26+` integration script; hard `Issue running postBuild()` failure with `--illegal-final-field-mutation=deny`). Gson won't fix upstream (google/gson#2991). Compared JsonFields+deserializers ([#2724](https://github.com/jbangdev/jbang/pull/2724)) vs private fields + `name()` accessors ([#2723](https://github.com/jbangdev/jbang/pull/2723)), both co-authored with UgurcanGursen | [x] [#2723](https://github.com/jbangdev/jbang/pull/2723) merged 52d3ff34 (accessors + kebab-case FieldNamingPolicy for catalog JSON + `TestGsonFinalFields`; catalog output byte-identical); #2713/#2724 closed; #2671 closed |
 | [#2697](https://github.com/jbangdev/jbang/pull/2697) | docs: identify JBang apps in VisualVM | docs only | [ ] |
 | [#2677](https://github.com/jbangdev/jbang/pull/2677) / [#2678](https://github.com/jbangdev/jbang/pull/2678) | fix: BOM deps / exclusions in generated POM for Quarkus native | related, review together | [ ] |
 | [#2650](https://github.com/jbangdev/jbang/pull/2650) | fix: pass system properties to native images | mergeable | [ ] |
@@ -52,6 +52,12 @@ Goal: shrink the PR queue to things that are actually alive, merge what's ready,
 | [#2675](https://github.com/jbangdev/jbang/pull/2675) | fix: reuse cached catalogs when refresh can't connect | CHANGES_REQUESTED since Oct | [ ] ping or close |
 | [#2668](https://github.com/jbangdev/jbang/pull/2668) | feat: info source-jar / source-path | CHANGES_REQUESTED + conflicting | [ ] ping or close |
 | [#2450](https://github.com/jbangdev/jbang/pull/2450), [#2449](https://github.com/jbangdev/jbang/pull/2449) | Windows USERPROFILE / cache clear deletes deps | CHANGES_REQUESTED + conflicting since spring | [ ] ping or close |
+
+Infra found along the way:
+- [x] PR builds broken since 2026-09-22: `PR_BUILDS_TOKEN` PAT (set 2026-08-23) expired → `publish-pr-build` / `cleanup-pr-builds` failed with `Bad credentials`, no PR builds published since. Replaced with org GitHub App `jbang-pr-builds-bot` (Contents rw on `jbang-pr-builds` only, no webhook); `vars.PR_BUILDS_APP_CLIENT_ID` + `secrets.PR_BUILDS_APP_KEY` set; workflows switched in [#2725](https://github.com/jbangdev/jbang/pull/2725) (merged 6ce2f933); cleanup verified green with app token; old `PR_BUILDS_TOKEN` secret deleted. Key copy in Max's password manager.
+- [ ] confirm `publish-pr-build` publishes with the app token (rerun of #2715's ci-build was in progress)
+- [ ] devkitman: merge + release [jbang-devkitman#116](https://github.com/jbangdev/jbang-devkitman/pull/116) (httpclient5 5.6.4, green), then bump `devkitmanVersion` in jbang and drop the httpclient5-cache `constraints {}` from #2718
+- [ ] jbang declares gson 2.13.2 but 2.14.0 resolves transitively → bump direct dep
 
 Conflicting external PRs needing a rebase or a close: [#2691](https://github.com/jbangdev/jbang/pull/2691), [#2667](https://github.com/jbangdev/jbang/pull/2667), [#2660](https://github.com/jbangdev/jbang/pull/2660), [#2633](https://github.com/jbangdev/jbang/pull/2633), [#2618](https://github.com/jbangdev/jbang/pull/2618), [#2615](https://github.com/jbangdev/jbang/pull/2615), [#2580](https://github.com/jbangdev/jbang/pull/2580).
 wfouche drafts: [#2666](https://github.com/jbangdev/jbang/pull/2666) (upx), [#2655](https://github.com/jbangdev/jbang/pull/2655) (superseded by [#2708](https://github.com/jbangdev/jbang/pull/2708)?), [#2653](https://github.com/jbangdev/jbang/pull/2653)/[#2654](https://github.com/jbangdev/jbang/pull/2654) (Gradle 9.7.1).
@@ -84,6 +90,7 @@ Ask quintesse to keep or close: [#2656](https://github.com/jbangdev/jbang/pull/2
 ## Phase 6 — release
 
 - [ ] main CI green (incl. new latest/EA JDK jobs)
+- [ ] remove `#2718` httpclient constraint once devkitman with #116 is released (ideally before release)
 - [ ] smoke test early-access build
 - [ ] release notes from merged PRs
 - [ ] tag + release (tag-and-release workflow)
