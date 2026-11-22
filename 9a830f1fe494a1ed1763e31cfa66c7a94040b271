@@ -55,8 +55,9 @@ Goal: shrink the PR queue to things that are actually alive, merge what's ready,
 
 Infra found along the way:
 - [x] PR builds broken since 2026-09-22: `PR_BUILDS_TOKEN` PAT (set 2026-08-23) expired → `publish-pr-build` / `cleanup-pr-builds` failed with `Bad credentials`, no PR builds published since. Replaced with org GitHub App `jbang-pr-builds-bot` (Contents rw on `jbang-pr-builds` only, no webhook); `vars.PR_BUILDS_APP_CLIENT_ID` + `secrets.PR_BUILDS_APP_KEY` set; workflows switched in [#2725](https://github.com/jbangdev/jbang/pull/2725) (merged 6ce2f933); cleanup verified green with app token; old `PR_BUILDS_TOKEN` secret deleted. Key copy in Max's password manager.
-- [ ] confirm `publish-pr-build` publishes with the app token (rerun of #2715's ci-build was in progress)
+- [x] confirm `publish-pr-build` publishes with the app token: [#2715](https://github.com/jbangdev/jbang/pull/2715) ci-build attempt 3 green → publish-pr-build run 44966700266 succeeded ("Get token for jbang-pr-builds" ok) → release `pr-2715` in jbang-pr-builds updated 2026-11-22T00:27Z
 - [ ] devkitman: merge + release [jbang-devkitman#116](https://github.com/jbangdev/jbang-devkitman/pull/116) (httpclient5 5.6.4, green), then bump `devkitmanVersion` in jbang and drop the httpclient5-cache `constraints {}` from #2718
+- [ ] flaky IT: `RunIT.shouldRunMultipleFilesUsingRemoteAlias` reads the `test` catalog live from `raw.githubusercontent.com/jbangdev/jbang/main/itests/` (failed once on #2715 attempt 2 with empty output, passed on rerun + locally) → use a local catalog / WireMock. Also recurring flake: `RunKotlinIT.shouldRunKotlin` (4 recent failures)
 - [ ] jbang declares gson 2.13.2 but 2.14.0 resolves transitively → bump direct dep
 
 Conflicting external PRs needing a rebase or a close: [#2691](https://github.com/jbangdev/jbang/pull/2691), [#2667](https://github.com/jbangdev/jbang/pull/2667), [#2660](https://github.com/jbangdev/jbang/pull/2660), [#2633](https://github.com/jbangdev/jbang/pull/2633), [#2618](https://github.com/jbangdev/jbang/pull/2618), [#2615](https://github.com/jbangdev/jbang/pull/2615), [#2580](https://github.com/jbangdev/jbang/pull/2580).
