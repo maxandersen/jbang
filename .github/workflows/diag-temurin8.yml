@@ -1,0 +1,58 @@
+name: diag-temurin8-checksum
+on:
+  push:
+    branches: [diag/temurin8-checksum]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  URL: https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u514-b01/OpenJDK8U-jdk_x64_linux_hotspot_8u514b01.tar.gz
+  EXPECTED: 27eda854481d20806d918b30cdd417c6bed4fd15882e24f3595dc8ae7fb5d095
+jobs:
+  diag:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: runner info
+        run: |
+          echo "runner: $RUNNER_NAME / $ImageOS $ImageVersion / $(uname -a)"
+          curl -s https://api.github.com/meta >/dev/null && echo "network ok"
+      - name: header chain (User-Agent actions/tool-cache, like setup-java)
+        run: curl -sSIL -A "actions/tool-cache" "$URL" | grep -iE '^(HTTP|location|content-length|content-type|etag|last-modified|age|x-cache|x-ms-|x-served-by|via|date|cache-control)' | sed -E 's/(sig|jwt)=[^&]*/\1=<redacted>/g'
+      - name: download with curl (both user agents)
+        run: |
+          for ua in "actions/tool-cache" "curl/diag"; do
+            echo "=== UA: $ua"
+            curl -sSL -A "$ua" -o jdk.tgz -w "http=%{http_code} bytes=%{size_download} type=%{content_type} time=%{time_total}s\n" "$URL"
+            sum=$( (sha256sum jdk.tgz 2>/dev/null || shasum -a 256 jdk.tgz) | cut -c1-64)
+            echo "sha256=$sum match=$([ "$sum" = "$EXPECTED" ] && echo YES || echo NO)"
+            file jdk.tgz || true
+            echo "--- first 400 bytes:"; head -c 400 jdk.tgz | od -c | head -12
+          done
+      - name: download exactly like setup-java (@actions/tool-cache downloadTool)
+        run: |
+          mkdir -p "$RUNNER_TEMP/tc" && cd "$RUNNER_TEMP/tc"
+          npm init -y >/dev/null && npm i --silent @actions/tool-cache@2 >/dev/null
+          cat > dl.mjs <<'JS'
+          import * as tc from '@actions/tool-cache';
+          import fs from 'fs'; import crypto from 'crypto';
+          const t = Date.now();
+          const p = await tc.downloadTool(process.env.URL);
+          const buf = fs.readFileSync(p);
+          const sha = crypto.createHash('sha256').update(buf).digest('hex');
+          console.log(`bytes=${buf.length} time=${Date.now()-t}ms sha256=${sha} match=${sha===process.env.EXPECTED ? 'YES' : 'NO'}`);
+          console.log('first 200 bytes:', JSON.stringify(buf.subarray(0, 200).toString('latin1')));
+          JS
+          node dl.mjs
+      - name: setup-java itself (same pin as jbang)
+        continue-on-error: true
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          java-version: 8
+          distribution: temurin
