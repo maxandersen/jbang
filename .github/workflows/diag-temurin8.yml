@@ -13,7 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04, ubuntu-26.04]
+        n: [1, 2, 3, 4, 5, 6]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -21,7 +22,8 @@ jobs:
     steps:
       - name: runner info
         run: |
-          echo "runner: $RUNNER_NAME / $ImageOS $ImageVersion / $(uname -a)"
+          echo "runner: $RUNNER_NAME / $ImageOS $ImageVersion / $(uname -r)"
+          echo "egress-ip: $(curl -s https://api.ipify.org)"
           curl -s https://api.github.com/meta >/dev/null && echo "network ok"
       - name: header chain (User-Agent actions/tool-cache, like setup-java)
         run: curl -sSIL -A "actions/tool-cache" "$URL" | grep -iE '^(HTTP|location|content-length|content-type|etag|last-modified|age|x-cache|x-ms-|x-served-by|via|date|cache-control)' | sed -E 's/(sig|jwt)=[^&]*/\1=<redacted>/g'
