@@ -190,6 +190,55 @@ public class TestNetrcParser {
 	}
 
 	@Test
+	void testDefaultMergesJbangNetrcWithNetrc() throws IOException {
+		assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+		String oldHome = System.getProperty("user.home");
+		try {
+			System.setProperty("user.home", tempDir.toString());
+			writePrivate(tempDir.resolve(".netrc"),
+					"machine maven.pkg.github.com login max password secret\n"
+							+ "machine only-netrc.com login a password b\n");
+			writePrivate(tempDir.resolve(".jbang-netrc"),
+					"machine maven.pkg.github.com jbang-auth gh-auth jbang-auth-host github.com\n"
+							+ "machine only-jbang.com jbang-auth glab-auth\n");
+
+			NetrcParser parser = NetrcParser.parseDefault();
+
+			NetrcEntry merged = parser.getEntry("maven.pkg.github.com").get();
+			assertEquals("max", merged.getLogin());
+			assertEquals("secret", merged.getPassword());
+			assertEquals("gh-auth", merged.getJbangAuth());
+			assertEquals("github.com", merged.getJbangAuthHost());
+			assertEquals("b", parser.getEntry("only-netrc.com").get().getPassword());
+			assertEquals("glab-auth", parser.getEntry("only-jbang.com").get().getJbangAuth());
+		} finally {
+			System.setProperty("user.home", oldHome);
+		}
+	}
+
+	@Test
+	void testMergePrefersPrimaryFields() throws IOException {
+		NetrcParser primary = parseString("machine example.com login jbang-user\ndefault jbang-auth git-credential\n");
+		NetrcParser fallback = parseString("machine EXAMPLE.com login netrc-user password pw\ndefault login anon\n");
+
+		NetrcParser merged = NetrcParser.merge(primary, fallback);
+
+		NetrcEntry entry = merged.getEntry("example.com").get();
+		assertEquals("jbang-user", entry.getLogin());
+		assertEquals("pw", entry.getPassword());
+		NetrcEntry def = merged.getEntry("other.com").get();
+		assertTrue(def.isDefault());
+		assertEquals("anon", def.getLogin());
+		assertEquals("git-credential", def.getJbangAuth());
+	}
+
+	private static void writePrivate(Path path, String content) throws IOException {
+		Files.writeString(path, content);
+		Files.setPosixFilePermissions(path,
+				EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+	}
+
+	@Test
 	void testPasswordOnly() throws IOException {
 		NetrcParser parser = parseString(
 				"machine gitlab.com\n" +

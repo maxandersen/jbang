@@ -108,9 +108,24 @@ password "my secret password"
 
 Backslash escapes work inside quoted strings: `\"` for a literal double-quote, `\\` for a literal backslash.
 
+=== JBang-specific netrc file
+
+JBang also reads `~/.jbang-netrc`, which uses the same format as `.netrc`. Use it to keep the JBang-specific keys (`jbang-auth`, `jbang-auth-host`, `jbang-auth-scheme`) out of `~/.netrc` when another tool that reads `~/.netrc` rejects unknown keys.
+
+JBang merges the two files per host. When both have an entry for the same host (or both have a `default` entry), values from `~/.jbang-netrc` win and `~/.netrc` fills in any keys `~/.jbang-netrc` doesn't set. For example, `~/.netrc` can hold the `login`/`password` while `~/.jbang-netrc` adds a `jbang-auth` for the same host:
+
+```
+# ~/.jbang-netrc
+machine maven.pkg.github.com
+jbang-auth gh-auth
+jbang-auth-host github.com
+```
+
+The same permission rules apply: use `chmod 600 ~/.jbang-netrc`.
+
 === Custom .netrc file path
 
-By default JBang reads `~/.netrc`. To use a different file:
+By default JBang reads `~/.jbang-netrc` and `~/.netrc`. To use a different file instead of both:
 
 ```bash
 # Via command-line option
@@ -192,7 +207,7 @@ This calls `gh auth token --hostname github.com` and uses the resulting token fo
 
 Credential results are cached per-host for the lifetime of the JBang process, so the subprocess is only invoked once per host.
 
-NOTE: `jbang-auth`, `jbang-auth-host`, and `jbang-auth-scheme` are JBang-specific extensions to the `.netrc` format. They are silently ignored by `curl`, `wget`, `git`, and other tools that read `.netrc`.
+NOTE: `jbang-auth`, `jbang-auth-host`, and `jbang-auth-scheme` are JBang-specific extensions to the `.netrc` format. They are silently ignored by `curl`, `wget`, `git`, and most other tools that read `.netrc`. If a tool rejects them, move these entries to `~/.jbang-netrc` (see <<JBang-specific netrc file>>).
 
 === Maven repository authentication
 

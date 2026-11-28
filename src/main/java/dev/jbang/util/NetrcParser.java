@@ -149,11 +149,59 @@ public class NetrcParser {
 	}
 
 	/**
-	 * Parse the default {@code .netrc} file. Returns an empty parser if the file
-	 * does not exist or cannot be read.
+	 * Returns the JBang-specific netrc file path: {@code ~/.jbang-netrc}.
+	 */
+	public static Path getDefaultJbangNetrcPath() {
+		return Paths.get(System.getProperty("user.home")).resolve(".jbang-netrc");
+	}
+
+	/**
+	 * Parse the default {@code ~/.jbang-netrc} and {@code ~/.netrc} files and merge
+	 * them. Missing or unreadable files are treated as empty.
+	 *
+	 * @see #merge(NetrcParser, NetrcParser)
 	 */
 	public static NetrcParser parseDefault() {
-		return parse(getDefaultNetrcPath());
+		return merge(parse(getDefaultJbangNetrcPath()), parse(getDefaultNetrcPath()));
+	}
+
+	/**
+	 * Merge two parsed netrc files per host. For a host present in both, fields set
+	 * in {@code primary} win and {@code fallback} fills in the rest. This lets
+	 * {@code ~/.jbang-netrc} hold the JBang-specific keys while {@code ~/.netrc}
+	 * keeps the standard {@code login}/{@code password} entries.
+	 */
+	static NetrcParser merge(NetrcParser primary, NetrcParser fallback) {
+		List<NetrcEntry> merged = new ArrayList<>();
+		List<NetrcEntry> remaining = new ArrayList<>(fallback.entries);
+		for (NetrcEntry p : primary.entries) {
+			NetrcEntry f = null;
+			for (NetrcEntry candidate : remaining) {
+				if (p.isDefault() ? candidate.isDefault()
+						: !candidate.isDefault() && p.getMachine().equalsIgnoreCase(candidate.getMachine())) {
+					f = candidate;
+					break;
+				}
+			}
+			if (f == null) {
+				merged.add(p);
+			} else {
+				remaining.remove(f);
+				merged.add(new NetrcEntry(p.getMachine(),
+						firstNonNull(p.getLogin(), f.getLogin()),
+						firstNonNull(p.getPassword(), f.getPassword()),
+						firstNonNull(p.getJbangAuth(), f.getJbangAuth()),
+						firstNonNull(p.getJbangAuthHost(), f.getJbangAuthHost()),
+						firstNonNull(p.getJbangAuthScheme(), f.getJbangAuthScheme()),
+						p.isDefault()));
+			}
+		}
+		merged.addAll(remaining);
+		return new NetrcParser(merged);
+	}
+
+	private static String firstNonNull(String a, String b) {
+		return a != null ? a : b;
 	}
 
 	/**
