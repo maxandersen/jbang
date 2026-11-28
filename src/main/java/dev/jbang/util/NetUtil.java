@@ -607,7 +607,7 @@ public class NetUtil {
 		}
 		if (cachedNetrc == null) {
 			if (netrcFile != null) {
-				cachedNetrc = NetrcParser.parse(netrcFile);
+				cachedNetrc = NetrcParser.parseWithCompanion(netrcFile);
 			} else {
 				cachedNetrc = NetrcParser.parseDefault();
 			}

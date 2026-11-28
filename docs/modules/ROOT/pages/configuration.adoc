@@ -125,7 +125,7 @@ The same permission rules apply: use `chmod 600 ~/.jbang-netrc`.
 
 === Custom .netrc file path
 
-By default JBang reads `~/.jbang-netrc` and `~/.netrc`. To use a different file instead of both:
+By default JBang reads `~/.jbang-netrc` and `~/.netrc`. To use a different file instead:
 
 ```bash
 # Via command-line option
@@ -137,6 +137,8 @@ jbang --no-netrc run script.java
 # Via jbang.properties (applies to all runs)
 jbang config set netrc /path/to/my-netrc
 ```
+
+A custom file gets a JBang-specific companion the same way: `jbang-` is prefixed to the file name in the same directory, and a leading dot is kept. So `--netrc /path/to/my-netrc` also reads `/path/to/jbang-my-netrc`, and `--netrc /path/to/.netrc` also reads `/path/to/.jbang-netrc`. The two are merged as described in <<JBang-specific netrc file>>.
 
 === GitLab token
 

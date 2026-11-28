@@ -217,6 +217,12 @@ public class TestNetrcParser {
 	}
 
 	@Test
+	void testJbangCompanionPath() {
+		assertEquals(tempDir.resolve(".jbang-netrc"), NetrcParser.getJbangCompanionPath(tempDir.resolve(".netrc")));
+		assertEquals(tempDir.resolve("jbang-xyz.txt"), NetrcParser.getJbangCompanionPath(tempDir.resolve("xyz.txt")));
+	}
+
+	@Test
 	void testMergePrefersPrimaryFields() throws IOException {
 		NetrcParser primary = parseString("machine example.com login jbang-user\ndefault jbang-auth git-credential\n");
 		NetrcParser fallback = parseString("machine EXAMPLE.com login netrc-user password pw\ndefault login anon\n");

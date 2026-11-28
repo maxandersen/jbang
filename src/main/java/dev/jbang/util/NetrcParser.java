@@ -149,20 +149,35 @@ public class NetrcParser {
 	}
 
 	/**
-	 * Returns the JBang-specific netrc file path: {@code ~/.jbang-netrc}.
+	 * Returns the JBang-specific companion of a netrc file: the same directory with
+	 * {@code jbang-} prefixed to the file name, keeping a leading dot. So
+	 * {@code ~/.netrc} becomes {@code ~/.jbang-netrc} and {@code /tmp/xyz.txt}
+	 * becomes {@code /tmp/jbang-xyz.txt}.
 	 */
-	public static Path getDefaultJbangNetrcPath() {
-		return Paths.get(System.getProperty("user.home")).resolve(".jbang-netrc");
+	public static Path getJbangCompanionPath(Path netrc) {
+		String name = netrc.getFileName().toString();
+		String companion = name.startsWith(".") ? ".jbang-" + name.substring(1) : "jbang-" + name;
+		return netrc.resolveSibling(companion);
 	}
 
 	/**
-	 * Parse the default {@code ~/.jbang-netrc} and {@code ~/.netrc} files and merge
-	 * them. Missing or unreadable files are treated as empty.
+	 * Parse the default {@code ~/.netrc} file merged with {@code ~/.jbang-netrc}.
+	 *
+	 * @see #parseWithCompanion(Path)
+	 */
+	public static NetrcParser parseDefault() {
+		return parseWithCompanion(getDefaultNetrcPath());
+	}
+
+	/**
+	 * Parse a netrc file merged with its JBang-specific companion (see
+	 * {@link #getJbangCompanionPath(Path)}). Missing or unreadable files are
+	 * treated as empty.
 	 *
 	 * @see #merge(NetrcParser, NetrcParser)
 	 */
-	public static NetrcParser parseDefault() {
-		return merge(parse(getDefaultJbangNetrcPath()), parse(getDefaultNetrcPath()));
+	public static NetrcParser parseWithCompanion(Path netrc) {
+		return merge(parse(getJbangCompanionPath(netrc)), parse(netrc));
 	}
 
 	/**

@@ -54,6 +54,25 @@ public class TestNetrcAuth extends BaseTest {
 	}
 
 	@Test
+	void testCustomNetrcMergesJbangCompanion() throws IOException {
+		setNetrc("machine gitlab.mycompany.com\nlogin __token__\npassword glpat-testtoken123\n");
+		Path companion = tempDir.resolve(".jbang-netrc");
+		Files.writeString(companion, "machine gitlab.mycompany.com\njbang-auth-scheme bearer\n");
+		try {
+			Files.setPosixFilePermissions(companion,
+					EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+		} catch (UnsupportedOperationException ignored) {
+		}
+
+		URLConnection connection = new NoOpUrlConnection(
+				new URL("https://gitlab.mycompany.com/group/project/-/raw/main/script.java"));
+
+		authentication().configure(connection);
+
+		assertThat(connection.getRequestProperty("Authorization"), equalTo("Bearer glpat-testtoken123"));
+	}
+
+	@Test
 	void testNetrcCredentialsForGitlab() throws IOException {
 		setNetrc("machine gitlab.mycompany.com\nlogin __token__\npassword glpat-testtoken123\n");
 
