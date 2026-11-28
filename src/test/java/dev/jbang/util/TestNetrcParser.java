@@ -217,6 +217,23 @@ public class TestNetrcParser {
 	}
 
 	@Test
+	void testDefaultReadsJbangNetrcWithoutNetrc() throws IOException {
+		assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+		String oldHome = System.getProperty("user.home");
+		try {
+			System.setProperty("user.home", tempDir.toString());
+			writePrivate(tempDir.resolve(".jbang-netrc"), "machine github.com jbang-auth gh-auth\n");
+
+			NetrcParser parser = NetrcParser.parseDefault();
+
+			assertFalse(Files.exists(tempDir.resolve(".netrc")));
+			assertEquals("gh-auth", parser.getEntry("github.com").get().getJbangAuth());
+		} finally {
+			System.setProperty("user.home", oldHome);
+		}
+	}
+
+	@Test
 	void testJbangCompanionPath() {
 		assertEquals(tempDir.resolve(".jbang-netrc"), NetrcParser.getJbangCompanionPath(tempDir.resolve(".netrc")));
 		assertEquals(tempDir.resolve("jbang-xyz.txt"), NetrcParser.getJbangCompanionPath(tempDir.resolve("xyz.txt")));
